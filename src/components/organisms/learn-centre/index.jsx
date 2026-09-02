@@ -337,7 +337,10 @@ export default function LearnCentre() {
 
 	if (session.isLoading || (user && progress.isLoading && !progress.data)) {
 		return (
-			<div className="flex min-h-[60vh] items-center justify-center pt-[76px]">
+			<div
+				className="flex min-h-[60vh] items-center justify-center pt-[76px]"
+				suppressHydrationWarning
+			>
 				<Loading />
 			</div>
 		)

@@ -1,4 +1,4 @@
-import { findUser } from "@/lib/data/auth-users"
+import { findUser, getOrCreateUser } from "@/lib/data/auth-users"
 import {
 	getCommunity,
 	getProgress,
@@ -8,7 +8,7 @@ import {
 import { Engine } from "@/lib/learning/engine"
 
 const userOf = mobile => {
-	const user = mobile ? findUser(mobile) : null
+	const user = mobile ? findUser(mobile) || getOrCreateUser(mobile) : null
 	if (!user) return null
 	return user
 }

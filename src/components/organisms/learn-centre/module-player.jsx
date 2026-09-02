@@ -1,16 +1,30 @@
 "use client"
 
-import { useEffect, useMemo, useRef, useState } from "react"
-import PanelKicker from "@/atoms/panel-kicker"
+import { ArrowLeft, Bot, Check, Sparkles } from "lucide-react"
+import { getCourseData } from "@/lib/data/course-data"
 import { completeStage, logActivity } from "@/lib/data/learn"
 import { Engine } from "@/lib/learning/engine"
-import { cn } from "@/lib/utils"
-import TaskCard from "@/molecules/task-card"
+import { sound } from "@/lib/learning/micro-audio"
 import { useLearn } from "@/organisms/learn-centre/context"
 import { Button } from "@/ui/button"
-import { Label } from "@/ui/label"
-import { Textarea } from "@/ui/textarea"
 import { toast } from "@/ui/toast"
+
+// 6 Interactive Stage Components
+import StageCheck from "./stages/stage-check"
+import StageLearn from "./stages/stage-learn"
+import StageRecap from "./stages/stage-recap"
+import StageSee from "./stages/stage-see"
+import StageTryAlone from "./stages/stage-try-alone"
+import StageTryTogether from "./stages/stage-try-together"
+
+const STAGE_LABELS = {
+	concept: { desc: "Absorb & Active Recall", icon: "💡", short: "Learn" },
+	demo: { desc: "Interactive Trace Simulation", icon: "👁️", short: "See" },
+	guided: { desc: "Guided Scaffolding", icon: "🤝", short: "Practice" },
+	quiz: { desc: "Mastery Assessment", icon: "🏆", short: "Check" },
+	reflect: { desc: "Career Vault Unlock", icon: "🔒", short: "Reward" },
+	task: { desc: "Real-world Scenario", icon: "🎯", short: "Challenge" },
+}
 
 export default function ModulePlayer() {
 	const {
@@ -20,10 +34,10 @@ export default function ModulePlayer() {
 		openModule,
 		openTutor,
 		saveState,
-		setTab,
 		setSubTab,
-		stageId,
+		setTab,
 		setStageId,
+		stageId,
 		states,
 	} = useLearn()
 
@@ -34,65 +48,178 @@ export default function ModulePlayer() {
 	const done = Engine.stagesDone(state, moduleIndex)
 	const order = Engine.STAGES.map(stage => stage.id)
 	const stageIndex = order.indexOf(stageId)
-	const [quizAnswers, setQuizAnswers] = useState({})
-	const [quizResult, setQuizResult] = useState(null)
-	const [reflectDraft, setReflectDraft] = useState(
-		() => state.reflect[String(moduleIndex)] || {},
-	)
-	const [activeTopicIdx, setActiveTopicIdx] = useState(0)
-	const topicRefs = useRef([])
 
-	useEffect(() => {
-		if (stageId !== "concept") return
-		const handleScroll = () => {
-			const viewportCenter = window.innerHeight * 0.45
-			let closestIdx = 0
-			let minDistance = Number.POSITIVE_INFINITY
+	// Fetch rich multi-stage data
+	const courseData = getCourseData(activeSlug)
+	const moduleData =
+		courseData?.modules?.find(m => m.module_index === moduleIndex) ||
+		courseData?.modules?.[moduleIndex] ||
+		courseData?.modules?.[0] ||
+		{}
+	const stagesData = moduleData?.stages || {}
 
-			topicRefs.current.forEach((el, idx) => {
-				if (!el) return
-				const rect = el.getBoundingClientRect()
-				const elementCenter = rect.top + rect.height / 2
-				const distance = Math.abs(viewportCenter - elementCenter)
-				if (distance < minDistance) {
-					minDistance = distance
-					closestIdx = idx
-				}
-			})
+	// Fallback mappings
+	const stage1Data = stagesData["1_learn"] || {
+		screens: [
+			{
+				content: {
+					body:
+						lesson?.detail ||
+						"Master this fundamental capability through active recall.",
+					headline: lesson?.title || "Core Concept Overview",
+					visual_hint:
+						lesson?.outcome ||
+						"🎯 Apply this skill to real-world workflows.",
+				},
+				emotional_tone: "calm",
+				feedback: {
+					correct:
+						"Spot on! This skill directly enables end-to-end capabilities.",
+					incorrect:
+						"Yes it is! This skill is foundational to modern workflows.",
+				},
+				interaction: {
+					correct_answer: "Yes",
+					hint: "Think about real-world automation and engineering applications.",
+					options: ["Yes", "No"],
+					prompt: `Is ${lesson?.title || "this skill"} directly applicable to production workflows?`,
+					type: "yes_no",
+				},
+				reading_time: "30 sec read",
+				screen_id: `${activeSlug}-${moduleIndex}-01`,
+				screen_type: "concept",
+			},
+		],
+	}
 
-			setActiveTopicIdx(closestIdx)
-		}
+	const stage2Data = stagesData["2_see"] || {
+		scenario_title:
+			kit.demo?.title ||
+			`${lesson?.title || "Concept"} Simulation Walkthrough`,
+		steps: (
+			kit.demo?.steps || [
+				"1. Trigger received and memory initialized.",
+				"2. Core engine validates state context.",
+				"3. Service executes and verifies output.",
+				"4. Formatted response is returned cleanly.",
+			]
+		).map((step, idx) => ({
+			actor: "Engine",
+			actor_icon: "⚡",
+			content: step,
+			explanation:
+				"Inspect how state transitions between stages in real time.",
+			raw_payload: {
+				phase: idx + 1,
+				status: "OK",
+				timestamp: "12:00:00",
+			},
+			stage_name: `Phase 0${idx + 1}`,
+		})),
+	}
 
-		window.addEventListener("scroll", handleScroll, { passive: true })
-		handleScroll()
-		return () => window.removeEventListener("scroll", handleScroll)
-	}, [stageId])
+	const stage3Data = stagesData["3_try_together"] || {
+		correct_answer: "B",
+		feedback: {
+			correct: `Spot on! Understanding ${lesson?.title || "this skill"} is foundational to modern workflows.`,
+			incorrect:
+				"Option B is correct. Input validation and clean transitions ensure high reliability.",
+		},
+		hint: `Think about how ${lesson?.title || "this concept"} is applied in practice.`,
+		options: [
+			{ id: "A", text: "Skip all error checks and manual verification" },
+			{
+				id: "B",
+				text: `Verify inputs and apply best practices for ${lesson?.title || "this task"}`,
+			},
+			{ id: "C", text: "Hardcode credentials into client-side code" },
+			{ id: "D", text: "Delete logs after deployment" },
+		],
+		prompt: `When implementing ${lesson?.title || "this capability"} in production, what is the most important requirement?`,
+		title: kit.guided?.title || `Guided ${lesson?.title || "Practice"}`,
+		type: "mcq",
+	}
 
-	const blocked = useMemo(() => {
-		if (stageId === "task") {
-			const tasks = Engine.tasksFor(activeSlug, moduleIndex)
-			if (tasks.length && !tasks.some(task => state.tasks[task.id])) {
-				return "Submit at least one Skill Challenge to unlock next stage."
-			}
-		}
-		if (stageId === "quiz") {
-			if ((kit.quiz || []).length && !state.quiz[String(moduleIndex)]) {
-				return "Pass the Knowledge Check quiz to continue."
-			}
-		}
-		return ""
-	}, [activeSlug, kit.quiz, moduleIndex, stageId, state])
+	const stage4Data = stagesData["4_try_alone"] || {
+		correct_answer: "A",
+		difficulty: "Level 3 - Production Scenario",
+		feedback: {
+			correct: `Mastery! You correctly handled the real-world edge case for ${lesson?.title || "this module"}.`,
+			incorrect:
+				"Option A is correct. Defensive error handling and retry logic prevent unexpected outages.",
+		},
+		hint: "Think about error handling, reliability, and edge cases.",
+		options: [
+			{
+				id: "A",
+				text: "Implement exponential backoff retry policies and alert on persistent failures",
+			},
+			{ id: "B", text: "Crash the application and wipe the database" },
+			{ id: "C", text: "Assume network requests will never fail" },
+			{
+				id: "D",
+				text: "Silently swallow all exceptions without logging",
+			},
+		],
+		prompt:
+			kit.tasks?.[0]?.brief ||
+			`In a production environment running ${lesson?.title || "this service"}, how should you handle unexpected failures or edge cases?`,
+		social_proof:
+			"💡 74% of developers encounter this challenge in live deployments",
+		title: `${lesson?.title || "Production"} Edge Case Challenge`,
+	}
+
+	const stage5Data = stagesData["5_check"] || {
+		questions: (kit.quiz?.length
+			? kit.quiz
+			: [
+					{
+						answer: 0,
+						options: [
+							`It enables structured, repeatable, and scalable ${lesson?.title || "operations"}`,
+							"It is only used for temporary local development",
+							"It increases manual labor without benefits",
+							"It cannot run in production cloud environments",
+						],
+						q: `What is the primary benefit of mastering ${lesson?.title || "this skill"}?`,
+						why: `Understanding ${lesson?.title || "this concept"} enables scalable, industry-standard practices.`,
+					},
+					{
+						answer: 1,
+						options: [
+							"Skip all tests and deploy immediately",
+							"Automate tests, monitor health metrics, and maintain version control",
+							"Never document changes or architecture decisions",
+							"Manually copy files across servers",
+						],
+						q: `Which practice ensures highest long-term maintainability for ${lesson?.title || "this topic"}?`,
+						why: "Automated testing, continuous monitoring, and version control are industry best practices.",
+					},
+				]
+		).map(q => ({
+			answer: q.answer,
+			options: q.options,
+			q: q.q,
+			why: q.why || "Anchors the core learning principle.",
+		})),
+		title: `${lesson?.title || "Module"} Mastery Assessment`,
+	}
+
+	const stage6Data = stagesData["6_recap"] || {
+		badge: `${program?.icon || "LU"} Specialist 🏆`,
+		capability_summary:
+			moduleData?.capability_unlock ||
+			`You have mastered ${lesson?.title || "this module"} and unlocked new career assets.`,
+		title: "Module Complete",
+		xp_reward: 100,
+	}
 
 	if (!(program && lesson)) return null
 
-	const pct = Engine.learningPct(activeSlug, state)
-	const isDone = done.has(stageId)
-	const wasLast = stageId === order[order.length - 1]
-	const nextLabel = wasLast
-		? done.has("reflect")
-			? "Next Module ➔"
-			: "Finish Module (+50 XP) ➔"
-		: "Complete Stage & Continue ➔"
+	const currentStageMeta = STAGE_LABELS[stageId] || {
+		icon: "💡",
+		short: "Learn",
+	}
 
 	const patchState = updater => {
 		saveState(activeSlug, current => {
@@ -102,1040 +229,342 @@ export default function ModulePlayer() {
 		})
 	}
 
-	const onNext = () => {
-		if (blocked) {
-			toast.add({ title: blocked, type: "info" })
-			return
-		}
-
-		if (wasLast) {
-			patchState(next => {
-				next.reflect[String(moduleIndex)] = reflectDraft
-			})
-		}
-
+	const handleStageCleared = () => {
 		patchState(next => {
 			completeStage(next, moduleIndex, stageId)
 			logActivity(next)
 		})
 
 		toast.add({
-			title: wasLast
-				? "Module Complete! +50 XP Earned"
-				: "Stage Cleared! +10 XP",
+			title: "Stage Cleared! +15 XP",
 			type: "success",
 		})
 
-		if (wasLast) {
-			const teaching = Engine.teachingModules(activeSlug).map(
-				item => item.index,
-			)
-			const nextModule = teaching[teaching.indexOf(moduleIndex) + 1]
-			if (nextModule !== undefined) {
-				openModule(nextModule, "concept")
-				return
-			}
-			closeCourse()
-			setTab("learn")
-			setSubTab("learn", "project")
-			return
-		}
-
 		const nextStage = order[stageIndex + 1]
-		if (nextStage) setStageId(nextStage)
-	}
-
-	const onPrev = () => {
-		if (stageIndex > 0) {
-			setStageId(order[stageIndex - 1])
-			return
-		}
-		if (moduleIndex > 0) {
-			openModule(moduleIndex - 1, order[order.length - 1])
+		if (nextStage) {
+			setStageId(nextStage)
 		}
 	}
 
-	const submitQuiz = event => {
-		event.preventDefault()
-		const questions = kit.quiz || []
-		const answers = questions.map((_, index) =>
-			Number(quizAnswers[`q${index}`]),
-		)
-		if (answers.some(value => Number.isNaN(value))) {
-			toast.add({ title: "Answer every question first.", type: "info" })
-			return
-		}
-		const correct = questions.filter(
-			(question, index) => answers[index] === question.answer,
-		).length
-		const score = Math.round((correct / questions.length) * 100)
-		const previous = state.quiz[String(moduleIndex)]
+	const handleFinishModule = () => {
 		patchState(next => {
-			next.quiz[String(moduleIndex)] = {
-				answers,
-				attempts: (previous?.attempts || 0) + 1,
-				score,
-			}
+			completeStage(next, moduleIndex, "reflect")
 			logActivity(next)
 		})
-		setQuizResult({ answers, correct, questions, score })
+
+		toast.add({
+			title: "Module Complete! +50 XP Earned 🎉",
+			type: "success",
+		})
+
+		const teaching = Engine.teachingModules(activeSlug).map(
+			item => item.index,
+		)
+		const nextModule = teaching[teaching.indexOf(moduleIndex) + 1]
+		if (nextModule !== undefined) {
+			openModule(nextModule, "concept")
+			return
+		}
+		closeCourse()
+		setTab("learn")
+		setSubTab("learn", "project")
 	}
 
+	// Calculate overall track progress
+	const totalModules = program.curriculum?.length || 1
+	const completedModulesCount = (program.curriculum || []).filter((_, i) =>
+		Engine.stagesDone(state, i).has("reflect"),
+	).length
+	const overallProgressPct = Math.round(
+		(completedModulesCount / totalModules) * 100,
+	)
+
 	return (
-		<div className="mx-auto max-w-[1280px] pb-28">
-			{/* Top Bar Navigation */}
-			<div className="mb-4 flex items-center justify-between">
-				<button
-					className="group inline-flex items-center gap-2 font-bold font-heading text-[0.84rem] text-ink-500 transition-colors hover:text-ink-900"
-					onClick={closeCourse}
-					type="button"
-				>
-					<span className="transition-transform group-hover:-translate-x-1">
-						←
-					</span>
-					<span>Back to Learning Dashboard</span>
-				</button>
+		<div
+			className="mx-auto max-w-[1360px] px-3 pb-28 sm:px-6"
+			suppressHydrationWarning
+		>
+			{/* 1. Sleek Consolidated Header */}
+			<header className="mb-6 flex flex-wrap items-center justify-between gap-4 border-line/70 border-b pt-1 pb-4">
+				<div className="flex items-center gap-3">
+					<button
+						className="flex items-center gap-1.5 rounded-xl border border-line bg-white px-3 py-1.5 font-bold text-ink-600 text-xs shadow-2xs transition-colors hover:bg-canvas-muted hover:text-ink-900"
+						onClick={() => {
+							sound.playClick()
+							closeCourse()
+						}}
+						type="button"
+					>
+						<ArrowLeft className="size-3.5" />
+						<span>Dashboard</span>
+					</button>
 
-				<div className="flex items-center gap-2">
-					<span className="rounded-full border border-brand-200 bg-amber-50 px-3 py-1 font-bold font-mono text-[0.7rem] text-brand-ink">
-						+50 XP on completion
-					</span>
+					<div className="h-4 w-px bg-line" />
+
+					<div className="flex items-center gap-2">
+						<span className="rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 font-bold font-mono text-[0.66rem] text-brand-ink uppercase">
+							{program.title}
+						</span>
+						<span className="max-w-[200px] truncate font-extrabold font-heading text-ink-900 text-sm sm:max-w-xs">
+							{moduleData?.module_title || lesson.title}
+						</span>
+					</div>
 				</div>
-			</div>
 
-			{/* 1. Gamified Header Card */}
-			<div className="mb-6 rounded-3xl border border-line bg-white p-5 shadow-xs sm:p-6">
-				<div className="flex flex-wrap items-start justify-between gap-4">
-					<div className="min-w-0 flex-1">
-						<div className="mb-1.5 flex items-center gap-2">
-							<span className="rounded-full border border-brand-300 bg-brand-50 px-2.5 py-0.5 font-bold font-mono text-[0.66rem] text-brand-ink uppercase">
-								{program.title}
+				<div className="flex items-center gap-2.5">
+					<div className="flex items-center gap-1.5 rounded-full border border-brand-200 bg-amber-50 px-3 py-1 font-bold font-mono text-brand-ink text-xs">
+						<Sparkles className="size-3.5 fill-brand-400 text-brand-500" />
+						<span>+50 XP</span>
+					</div>
+
+					<Button
+						className="h-8.5 rounded-xl px-3 font-bold text-xs shadow-2xs"
+						onClick={() => {
+							sound.playClick()
+							openTutor(
+								`Explain ${lesson.title} in simple bullet points with real examples`,
+							)
+						}}
+						size="sm"
+						variant="outline"
+					>
+						<Bot className="mr-1.5 size-3.5 text-brand-500" />
+						<span>Ask AI</span>
+					</Button>
+				</div>
+			</header>
+
+			{/* 2. Main 2-Column Learning Arena: [Interactive Stage Canvas (Left)] + [Track Modules Sidebar (Right)] */}
+			<div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[1fr_340px]">
+				{/* LEFT: Active Stage Stepper & Interactive Learning Card */}
+				<div className="min-w-0 space-y-4">
+					{/* 6-Stage Progress Stepper Pills */}
+					<div className="space-y-2">
+						<div className="flex items-center justify-between px-1 text-xs">
+							<span className="flex items-center gap-2 font-bold font-heading text-ink-900">
+								<span className="grid size-5 place-items-center rounded-md bg-brand-500 font-bold font-mono text-[0.7rem] text-slate-950">
+									{stageIndex + 1}
+								</span>
+								<span>{currentStageMeta.desc}</span>
 							</span>
-							<span className="font-mono text-ink-400 text-xs">
-								● {lesson.week || `Module 0${moduleIndex + 1}`}
+							<span className="font-bold font-mono text-[0.72rem] text-ink-500">
+								Stage {stageIndex + 1} of {order.length}
 							</span>
 						</div>
-						<h1 className="font-extrabold font-heading text-2xl text-ink-900 tracking-tight sm:text-[1.75rem]">
-							{lesson.title}
-						</h1>
-						<p className="mt-1.5 max-w-[700px] text-[0.88rem] text-ink-500 leading-relaxed">
-							{lesson.detail}
-						</p>
-					</div>
 
-					<div className="flex shrink-0 items-center gap-3">
-						<Button
-							className="shadow-xs"
-							onClick={() =>
-								openTutor(
-									`Explain ${lesson.title} step-by-step with examples`,
-								)
-							}
-							size="sm"
-							type="button"
-							variant="outline"
-						>
-							Ask AI Tutor
-						</Button>
-					</div>
-				</div>
+						{/* Stepper Tabs */}
+						<div className="grid grid-cols-6 gap-1.5 sm:gap-2">
+							{Engine.STAGES.map((stg, _idx) => {
+								const isActive = stg.id === stageId
+								const isDone = done.has(stg.id)
+								const meta = STAGE_LABELS[stg.id] || {
+									icon: "●",
+									short: stg.label,
+								}
 
-				{/* Progress Track */}
-				<div className="mt-5 space-y-1.5 border-line/60 border-t pt-4">
-					<div className="flex items-center justify-between text-xs">
-						<span className="font-bold text-ink-700">
-							Module Quest Progress
-						</span>
-						<span className="font-bold font-mono text-brand-ink">
-							{done.size} / {Engine.STAGES.length} Stages Cleared
-							({pct}%)
-						</span>
-					</div>
-					<div className="h-2 w-full overflow-hidden rounded-full bg-canvas-sunken">
-						<div
-							className="h-full rounded-full bg-[linear-gradient(90deg,var(--brand-400),var(--brand-500))] shadow-[0_0_8px_var(--brand-400)] transition-all duration-500"
-							style={{
-								width: `${Math.max((done.size / Engine.STAGES.length) * 100, 4)}%`,
-							}}
-						/>
-					</div>
-				</div>
-			</div>
-
-			{/* 2. Main Stage Stage Nodes & Content Layout */}
-			<div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_300px]">
-				<div className="min-w-0 space-y-5">
-					{/* Quest Stage Progression Nodes */}
-					<div
-						className="scrollbar-hide flex gap-2.5 overflow-x-auto pb-1"
-						role="tablist"
-					>
-						{Engine.STAGES.map((stage, index) => {
-							const active = stage.id === stageId
-							const stageDone = done.has(stage.id)
-							return (
-								<button
-									aria-selected={active}
-									className={cn(
-										"group relative flex min-w-[130px] flex-1 items-center gap-3 rounded-2xl border p-3 text-left transition-all duration-200",
-										active
-											? "border-brand-500 bg-brand-50/80 shadow-xs ring-2 ring-brand-200"
-											: stageDone
-												? "border-emerald-200 bg-emerald-50/40 hover:border-emerald-300"
-												: "border-line bg-white hover:border-brand-200 hover:bg-canvas-muted",
-									)}
-									key={stage.id}
-									onClick={() => setStageId(stage.id)}
-									role="tab"
-									type="button"
-								>
-									{/* Node Number / Check */}
-									<span
-										className={cn(
-											"grid size-7 shrink-0 place-items-center rounded-xl font-bold font-mono text-xs transition-colors",
-											stageDone
-												? "bg-emerald-500 text-white shadow-xs"
-												: active
-													? "bg-brand-500 text-on-brand shadow-xs"
-													: "border border-line bg-canvas-muted text-ink-500",
-										)}
-									>
-										{stageDone ? "✓" : index + 1}
-									</span>
-
-									<div className="min-w-0">
-										<strong
-											className={cn(
-												"block truncate font-extrabold font-heading text-[0.82rem] leading-tight",
-												active
-													? "text-brand-ink"
-													: stageDone
-														? "text-emerald-950"
-														: "text-ink-800",
-											)}
-										>
-											{stage.label}
-										</strong>
-										<span className="block truncate font-mono text-[0.68rem] text-ink-400">
-											{stage.blurb}
-										</span>
-									</div>
-								</button>
-							)
-						})}
-					</div>
-
-					{/* Stage Main Body Content Container */}
-					<div className="rounded-3xl border border-line bg-white p-6 shadow-xs sm:p-7">
-						{isDone ? (
-							<div className="mb-5 flex items-center justify-between rounded-2xl border border-emerald-200 bg-emerald-50/60 p-3.5 text-emerald-900 text-xs">
-								<span className="flex items-center gap-2 font-bold font-heading text-[0.84rem]">
-									<span className="grid size-5 place-items-center rounded-full bg-emerald-500 text-[0.65rem] text-white">
-										✓
-									</span>
-									Stage Completed
-								</span>
-								<span className="font-mono text-emerald-700">
-									+10 XP Earned
-								</span>
-							</div>
-						) : null}
-
-						{/* STAGE 1: Concept & Video */}
-						{stageId === "concept" ? (
-							<div className="space-y-6">
-								{/* Cosmic Video Player Shell */}
-								<div className="group relative flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-[linear-gradient(140deg,#0A0E17_0%,#131B2B_50%,#090D15_100%)] text-white shadow-xl">
-									{/* Glow & grid backdrop */}
-									<div className="pointer-events-none absolute -top-12 -right-12 size-48 rounded-full bg-brand-500/15 blur-[60px]" />
-									<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(255,179,0,0.08)_1px,transparent_1px)] bg-size-[20px_20px]" />
-
-									<div className="relative z-10 flex flex-col items-center p-4 text-center">
-										<div className="mb-3 grid size-16 place-items-center rounded-full border-2 border-brand-400/60 bg-brand-500 text-2xl text-on-brand shadow-[0_0_25px_rgba(255,179,0,0.4)] transition-transform duration-300 group-hover:scale-110">
-											▶
-										</div>
-										<p className="font-extrabold font-heading text-base text-white tracking-tight sm:text-lg">
-											{lesson.week} · {lesson.title}
-										</p>
-										<span className="mt-1 font-mono text-[0.74rem] text-slate-400">
-											HD Concept Walkthrough · ~12 mins
-										</span>
-									</div>
-								</div>
-
-								{/* Structured Curriculum Points with Dynamic Scroll Spotlight Focus */}
-								<div className="space-y-4">
-									<div className="flex items-center justify-between px-1">
-										<span className="font-bold font-mono text-[0.7rem] text-brand-ink uppercase tracking-wider">
-											TOPIC CURRICULUM · SCROLL TO
-											NAVIGATE
-										</span>
-										<span className="rounded-full bg-brand-50 px-2.5 py-0.5 font-bold font-mono text-[0.65rem] text-brand-ink">
-											{activeTopicIdx + 1} of{" "}
-											{(lesson.sections || []).length} In
-											Focus
-										</span>
-									</div>
-
-									{(lesson.sections || []).map(
-										(section, idx) => {
-											const isFocused =
-												idx === activeTopicIdx
-											return (
-												<button
-													className={cn(
-														"group relative w-full rounded-2xl border p-5 text-left transition-all duration-500",
-														isFocused
-															? "scale-[1.008] border-brand-400 bg-white opacity-100 shadow-lu-sm ring-2 ring-brand-200/80"
-															: "scale-[0.985] cursor-pointer border-line bg-canvas-muted/40 opacity-40 blur-[2px] grayscale-[25%] hover:opacity-85 hover:blur-none hover:grayscale-0",
-													)}
-													key={section.name}
-													onClick={() =>
-														setActiveTopicIdx(idx)
-													}
-													ref={el => {
-														topicRefs.current[idx] =
-															el
-													}}
-													type="button"
-												>
-													<div className="mb-2.5 flex items-center justify-between">
-														<div className="flex items-center gap-2">
-															<span
-																className={cn(
-																	"grid size-6 place-items-center rounded-lg font-bold font-mono text-xs shadow-xs transition-colors",
-																	isFocused
-																		? "bg-brand-500 text-on-brand"
-																		: "border border-line bg-white text-ink-700",
-																)}
-															>
-																{idx + 1}
-															</span>
-															<h3
-																className={cn(
-																	"font-extrabold font-heading text-[0.98rem] transition-colors",
-																	isFocused
-																		? "text-ink-900"
-																		: "text-ink-700",
-																)}
-															>
-																{section.name}
-															</h3>
-														</div>
-
-														{isFocused && (
-															<span className="flex items-center gap-1.5 rounded-full border border-brand-300 bg-amber-50 px-2.5 py-0.5 font-bold font-mono text-[0.65rem] text-brand-ink">
-																<span className="size-1.5 animate-pulse rounded-full bg-brand-500" />
-																READING FOCUS
-															</span>
-														)}
-													</div>
-													<ul className="list-disc space-y-1.5 pl-8 text-[0.86rem] text-ink-700 leading-relaxed">
-														{section.points.map(
-															point => (
-																<li key={point}>
-																	{point}
-																</li>
-															),
-														)}
-													</ul>
-												</button>
-											)
-										},
-									)}
-
-									{/* Outcome / Takeaway Box */}
-									{lesson.outcome ? (
-										<div className="rounded-2xl border border-brand-200 bg-amber-50/50 p-4.5">
-											<PanelKicker className="mb-1 text-brand-ink">
-												MISSION OUTCOME
-											</PanelKicker>
-											<p className="font-medium text-[0.88rem] text-ink-800 leading-relaxed">
-												{lesson.outcome}
-											</p>
-										</div>
-									) : null}
-								</div>
-							</div>
-						) : null}
-
-						{/* STAGE 2: Demo */}
-						{stageId === "demo" ? (
-							<div className="space-y-6">
-								<div className="group relative flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-[linear-gradient(140deg,#0A0E17_0%,#131B2B_50%,#090D15_100%)] text-white shadow-xl">
-									<div className="pointer-events-none absolute -top-12 -right-12 size-48 rounded-full bg-brand-500/15 blur-[60px]" />
-									<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgba(255,179,0,0.08)_1px,transparent_1px)] bg-size-[20px_20px]" />
-									<div className="relative z-10 p-4 text-center">
-										<div className="mb-3 grid size-16 place-items-center rounded-full border-2 border-brand-400/60 bg-brand-500 text-2xl text-on-brand shadow-[0_0_25px_rgba(255,179,0,0.4)] transition-transform duration-300 group-hover:scale-110">
-											▶
-										</div>
-										<p className="font-extrabold font-heading text-base text-white sm:text-lg">
-											Instructor Demo ·{" "}
-											{kit.demo?.title || lesson.title}
-										</p>
-										<span className="mt-1 font-mono text-[0.74rem] text-slate-400">
-											Interactive Walkthrough ·{" "}
-											{(kit.demo?.steps || []).length}{" "}
-											Phases
-										</span>
-									</div>
-								</div>
-
-								{/* Step by Step Action Cards */}
-								<div className="space-y-3.5">
-									<div className="flex items-center justify-between px-1">
-										<span className="font-bold font-mono text-[0.7rem] text-brand-ink uppercase tracking-wider">
-											STEP-BY-STEP LIVE DEMO BREAKDOWN
-										</span>
-										<span className="rounded-full bg-brand-50 px-2.5 py-0.5 font-bold font-mono text-[0.65rem] text-brand-ink">
-											{(kit.demo?.steps || []).length} Key
-											Checkpoints
-										</span>
-									</div>
-
-									<div className="grid gap-3">
-										{(kit.demo?.steps || []).map(
-											(step, stepIdx) => (
-												<div
-													className="group relative flex items-start gap-3.5 rounded-2xl border border-line bg-gradient-to-r from-white to-amber-50/20 p-4 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-brand-300 hover:shadow-lu-sm"
-													key={step}
-												>
-													<span className="grid size-7 shrink-0 place-items-center rounded-xl border border-brand-200 bg-brand-50 font-bold font-mono text-brand-ink text-xs shadow-xs transition-colors group-hover:bg-brand-500 group-hover:text-on-brand">
-														0{stepIdx + 1}
-													</span>
-													<div className="min-w-0 flex-1">
-														<div className="mb-1 flex items-center gap-2">
-															<span className="font-bold font-mono text-[0.66rem] text-ink-400 uppercase tracking-wide">
-																PHASE 0
-																{stepIdx + 1}
-															</span>
-														</div>
-														<p className="font-medium text-[0.88rem] text-ink-800 leading-relaxed">
-															{step}
-														</p>
-													</div>
-												</div>
-											),
-										)}
-									</div>
-								</div>
-							</div>
-						) : null}
-
-						{/* STAGE 3: Guided Practice */}
-						{stageId === "guided" ? (
-							<div className="space-y-6">
-								<div className="rounded-2xl border border-brand-200/80 bg-gradient-to-br from-white to-amber-50/40 p-5 shadow-xs">
-									<div className="mb-1.5 flex items-center gap-2">
-										<span className="rounded-full border border-brand-300 bg-brand-50 px-2.5 py-0.5 font-bold font-mono text-[0.66rem] text-brand-ink uppercase">
-											GUIDED HANDS-ON QUEST
-										</span>
-									</div>
-									<h3 className="font-extrabold font-heading text-ink-900 text-xl">
-										{kit.guided?.title ||
-											"Guided Hands-On Exercise"}
-									</h3>
-									<p className="mt-1.5 text-[0.88rem] text-ink-600 leading-relaxed">
-										{kit.guided?.brief ||
-											lesson.activity ||
-											""}
-									</p>
-								</div>
-
-								{/* Step cards */}
-								<div className="space-y-3">
-									<span className="block px-1 font-bold font-mono text-[0.7rem] text-brand-ink uppercase tracking-wider">
-										EXECUTION WORKFLOW
-									</span>
-									<div className="grid gap-2.5">
-										{(kit.guided?.steps || []).map(
-											(step, sIdx) => (
-												<div
-													className="flex items-start gap-3 rounded-2xl border border-line bg-white p-3.5 shadow-xs transition-colors hover:border-brand-200 hover:bg-amber-50/20"
-													key={step}
-												>
-													<span className="grid size-6 shrink-0 place-items-center rounded-lg border border-brand-200 bg-brand-50 font-bold font-mono text-brand-ink text-xs">
-														{sIdx + 1}
-													</span>
-													<p className="font-medium text-[0.86rem] text-ink-800 leading-relaxed">
-														{step}
-													</p>
-												</div>
-											),
-										)}
-									</div>
-								</div>
-
-								{kit.guided?.starter ? (
-									<div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950 text-slate-100 shadow-lg">
-										<div className="flex items-center justify-between border-slate-800 border-b bg-slate-900/90 px-4 py-2.5">
-											<div className="flex items-center gap-2">
-												<span className="size-2.5 rounded-full bg-red-500/80" />
-												<span className="size-2.5 rounded-full bg-amber-500/80" />
-												<span className="size-2.5 rounded-full bg-emerald-500/80" />
-												<span className="ml-2 font-bold font-mono text-[0.72rem] text-slate-300">
-													STARTER PROMPT / CODE
-												</span>
-											</div>
-											<div className="flex items-center gap-2">
-												<button
-													className="rounded-lg border border-slate-700 bg-slate-800 px-3 py-1 font-bold font-mono text-[0.75rem] text-slate-200 transition-colors hover:bg-slate-700 hover:text-white"
-													onClick={() => {
-														navigator.clipboard?.writeText(
-															kit.guided.starter,
-														)
-														toast.add({
-															title: "Copied starter to clipboard!",
-															type: "success",
-														})
-													}}
-													type="button"
-												>
-													Copy Prompt 📋
-												</button>
-												<Button
-													className="h-7 text-xs shadow-none"
-													onClick={() =>
-														openTutor(
-															`Review starter code: ${kit.guided.starter}`,
-														)
-													}
-													size="sm"
-													type="button"
-												>
-													Ask AI Tutor 🤖
-												</Button>
-											</div>
-										</div>
-										<pre className="overflow-x-auto whitespace-pre-wrap p-4 font-mono text-[0.84rem] text-amber-200/95 leading-relaxed">
-											{kit.guided.starter}
-										</pre>
-									</div>
-								) : null}
-							</div>
-						) : null}
-
-						{/* STAGE 4: Tasks */}
-						{stageId === "task" ? (
-							<div className="space-y-4">
-								<div className="flex items-center justify-between border-line border-b pb-3">
-									<div>
-										<h3 className="font-extrabold font-heading text-[1.1rem] text-ink-900">
-											Independent Skill Challenges
-										</h3>
-										<p className="text-[0.84rem] text-ink-500">
-											Submit at least 1 task to verify
-											your hands-on mastery.
-										</p>
-									</div>
-									<span className="rounded-full bg-brand-50 px-3 py-1 font-bold font-mono text-brand-ink text-xs">
-										{
-											Engine.tasksFor(
-												activeSlug,
-												moduleIndex,
-											).filter(t => state.tasks[t.id])
-												.length
-										}{" "}
-										/{" "}
-										{
-											Engine.tasksFor(
-												activeSlug,
-												moduleIndex,
-											).length
-										}{" "}
-										Done
-									</span>
-								</div>
-
-								<div className="grid gap-3 pt-2">
-									{Engine.tasksFor(
-										activeSlug,
-										moduleIndex,
-									).map(task => (
-										<TaskCard
-											key={task.id}
-											moduleIndex={moduleIndex}
-											task={task}
-										/>
-									))}
-								</div>
-							</div>
-						) : null}
-						{/* STAGE 5: Quiz */}
-						{stageId === "quiz" ? (
-							<div className="space-y-6">
-								{/* Compact Quest Header Card */}
-								<div className="relative overflow-hidden rounded-2xl border border-brand-200/80 bg-gradient-to-r from-amber-50/60 via-white to-amber-50/30 p-4 shadow-xs sm:p-5">
-									<div className="flex flex-wrap items-center justify-between gap-3">
-										<div>
-											<div className="mb-1 flex items-center gap-2">
-												<span className="rounded-full border border-brand-300 bg-brand-50 px-2.5 py-0.5 font-bold font-mono text-[0.66rem] text-brand-ink uppercase">
-													STAGE 05 · KNOWLEDGE CHECK
-												</span>
-												<span className="font-mono text-ink-400 text-xs">
-													● {(kit.quiz || []).length}{" "}
-													Questions
-												</span>
-											</div>
-											<h3 className="font-extrabold font-heading text-ink-900 text-lg">
-												Module Knowledge Challenge
-											</h3>
-											<p className="mt-0.5 text-[0.82rem] text-ink-500">
-												Score 60%+ to complete this
-												stage and earn your verification
-												XP.
-											</p>
-										</div>
-
-										<div className="flex items-center gap-2">
-											<span className="rounded-xl border border-brand-200 bg-white px-3 py-1.5 font-bold font-mono text-[0.76rem] text-brand-ink shadow-2xs">
-												⚡ +50 XP Reward
-											</span>
-										</div>
-									</div>
-								</div>
-
-								{!(kit.quiz || []).length ? (
-									<p className="py-8 text-center font-mono text-ink-500 text-sm">
-										Question bank being curated for this
-										module.
-									</p>
-								) : (
-									<form
-										className="space-y-6"
-										onSubmit={submitQuiz}
-									>
-										{(kit.quiz || []).map(
-											(question, index) => {
-												const isSubmitted =
-													Boolean(quizResult)
-												const selectedVal = Number(
-													quizAnswers[`q${index}`],
-												)
-												const isAnswered =
-													!Number.isNaN(
-														selectedVal,
-													) && selectedVal >= 0
-
-												return (
-													<div
-														className={cn(
-															"group relative overflow-hidden rounded-3xl border-2 bg-white p-6 shadow-xs transition-all duration-300 hover:border-brand-400 hover:shadow-lu-md sm:p-7",
-															isAnswered
-																? "border-brand-200"
-																: "border-slate-200/90",
-														)}
-														key={question.q}
-													>
-														{/* Question Header Pill Bar */}
-														<div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-line/60 border-b pb-3.5">
-															<div className="flex items-center gap-2.5">
-																<span className="grid size-8 place-items-center rounded-xl border border-brand-300 bg-brand-50 font-extrabold font-mono text-brand-ink text-xs shadow-2xs">
-																	Q{index + 1}
-																</span>
-																<span className="font-bold font-mono text-[0.72rem] text-ink-500 uppercase tracking-wider">
-																	QUESTION{" "}
-																	{index + 1}{" "}
-																	OF{" "}
-																	{
-																		(
-																			kit.quiz ||
-																			[]
-																		).length
-																	}
-																</span>
-															</div>
-
-															<div className="flex items-center gap-2">
-																{isAnswered ? (
-																	<span className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 font-bold font-mono text-[0.68rem] text-emerald-700">
-																		<span className="size-1.5 rounded-full bg-emerald-500" />
-																		Answer
-																		Selected
-																	</span>
-																) : (
-																	<span className="rounded-full bg-canvas-muted px-2.5 py-0.5 font-mono text-[0.68rem] text-ink-400">
-																		Pending
-																	</span>
-																)}
-																<span className="rounded-full border border-brand-200 bg-amber-50 px-2.5 py-0.5 font-bold font-mono text-[0.68rem] text-brand-ink">
-																	+15 XP
-																</span>
-															</div>
-														</div>
-
-														{/* Question Title */}
-														<h4 className="font-extrabold font-heading text-[1.1rem] text-ink-900 leading-snug">
-															{question.q}
-														</h4>
-
-														{/* 3D Tactile Option Buttons */}
-														<div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-															{question.options.map(
-																(
-																	option,
-																	optionIndex,
-																) => {
-																	const isSelected =
-																		selectedVal ===
-																		optionIndex
-																	const letter =
-																		[
-																			"A",
-																			"B",
-																			"C",
-																			"D",
-																		][
-																			optionIndex
-																		] ||
-																		String(
-																			optionIndex +
-																				1,
-																		)
-																	const isCorrect =
-																		isSubmitted &&
-																		optionIndex ===
-																			question.answer
-																	const isUserWrong =
-																		isSubmitted &&
-																		isSelected &&
-																		optionIndex !==
-																			question.answer
-
-																	return (
-																		<button
-																			className={cn(
-																				"group/opt relative flex items-start gap-3.5 rounded-2xl border-2 p-4 text-left transition-all duration-200",
-																				// 3D tactile button border states
-																				isSelected
-																					? "border-brand-500 border-b-4 border-b-brand-600 bg-amber-50/90 text-brand-ink shadow-sm ring-2 ring-brand-300/80"
-																					: "border-slate-200/90 border-b-4 border-b-slate-300 bg-white text-ink-800 hover:-translate-y-0.5 hover:border-brand-300 hover:border-b-4 hover:border-b-brand-400 hover:bg-amber-50/20 active:translate-y-0.5 active:border-b-2",
-																				isCorrect &&
-																					"border-emerald-500 border-b-4 border-b-emerald-600 bg-emerald-50 text-emerald-950 ring-2 ring-emerald-300",
-																				isUserWrong &&
-																					"border-rose-400 border-b-4 border-b-rose-500 bg-rose-50 text-rose-950 line-through opacity-90 ring-2 ring-rose-200",
-																			)}
-																			key={
-																				option
-																			}
-																			onClick={() =>
-																				setQuizAnswers(
-																					prev => ({
-																						...prev,
-																						[`q${index}`]:
-																							String(
-																								optionIndex,
-																							),
-																					}),
-																				)
-																			}
-																			type="button"
-																		>
-																			{/* Letter Badge Avatar */}
-																			<span
-																				className={cn(
-																					"grid size-8 shrink-0 place-items-center rounded-xl font-extrabold font-mono text-xs transition-all duration-200",
-																					isSelected
-																						? "bg-brand-500 text-on-brand shadow-xs"
-																						: "border border-line bg-canvas-muted text-ink-600 group-hover/opt:border-brand-300 group-hover/opt:bg-brand-50 group-hover/opt:text-brand-ink",
-																					isCorrect &&
-																						"bg-emerald-500 text-white",
-																					isUserWrong &&
-																						"bg-rose-500 text-white",
-																				)}
-																			>
-																				{isCorrect
-																					? "✓"
-																					: isUserWrong
-																						? "✕"
-																						: letter}
-																			</span>
-
-																			<div className="min-w-0 flex-1">
-																				<span className="block font-medium text-[0.9rem] leading-snug">
-																					{
-																						option
-																					}
-																				</span>
-																				{isCorrect && (
-																					<span className="mt-1 block font-bold font-mono text-[0.68rem] text-emerald-700">
-																						✓
-																						Correct
-																						Choice
-																					</span>
-																				)}
-																				{isUserWrong && (
-																					<span className="mt-1 block font-bold font-mono text-[0.68rem] text-rose-600">
-																						✕
-																						Incorrect
-																						Choice
-																					</span>
-																				)}
-																			</div>
-																		</button>
-																	)
-																},
-															)}
-														</div>
-
-														{/* Post-submission Knowledge Insight Feedback */}
-														{isSubmitted &&
-														question.explain ? (
-															<div className="mt-4 rounded-2xl border border-brand-200 bg-amber-50/50 p-4 text-ink-700 text-xs">
-																<strong className="block font-bold font-heading text-[0.82rem] text-brand-ink">
-																	💡 Knowledge
-																	Explanation:
-																</strong>
-																<p className="mt-0.5 text-ink-600 leading-relaxed">
-																	{
-																		question.explain
-																	}
-																</p>
-															</div>
-														) : null}
-													</div>
-												)
-											},
-										)}
-
-										{/* Gamified Action Bar */}
-										<div className="flex flex-wrap items-center gap-3.5 pt-2">
-											<Button
-												className="gap-2 border-b-4 border-b-brand-600 px-6 py-6 font-extrabold text-[0.95rem] shadow-lu-sm active:translate-y-0.5 active:border-b-2"
-												size="default"
-												type="submit"
-											>
-												<span>
-													⚡ Submit & Verify Answers
-												</span>
-												<span className="rounded-full bg-black/10 px-2 py-0.5 font-mono text-xs">
-													+50 XP
-												</span>
-											</Button>
-
-											{quizResult ? (
-												<Button
-													className="px-5 py-6 font-bold"
-													onClick={() => {
-														setQuizResult(null)
-														setQuizAnswers({})
-													}}
-													type="button"
-													variant="outline"
-												>
-													Retake Challenge 🔄
-												</Button>
-											) : null}
-										</div>
-									</form>
-								)}
-
-								{/* Celebratory Result Card */}
-								{quizResult ? (
-									<div
-										className={cn(
-											"overflow-hidden rounded-3xl border-2 p-6 shadow-lu-sm sm:p-7",
-											quizResult.score >= 60
-												? "border-emerald-300 bg-gradient-to-r from-white via-emerald-50/40 to-white text-emerald-950"
-												: "border-rose-300 bg-gradient-to-r from-white via-rose-50/40 to-white text-rose-950",
-										)}
-									>
-										<div className="flex flex-wrap items-center justify-between gap-4">
-											<div>
-												<span className="rounded-full bg-white/80 px-3 py-1 font-bold font-mono text-[0.7rem] uppercase tracking-wider shadow-2xs">
-													{quizResult.score >= 60
-														? "🎉 KNOWLEDGE CHECK CLEARED"
-														: "⚠️ PASS SCORE: 60% REQUIRED"}
-												</span>
-												<h4 className="mt-2 font-extrabold font-heading text-2xl sm:text-3xl">
-													Verification Score:{" "}
-													{quizResult.score}%
-												</h4>
-												<p className="mt-1 text-[0.88rem] text-ink-600">
-													{quizResult.correct} of{" "}
-													{
-														quizResult.questions
-															.length
-													}{" "}
-													questions answered
-													accurately.{" "}
-													{quizResult.score >= 60
-														? "You have successfully earned +50 XP and unlocked the Reflection stage!"
-														: "Score is below 60%. Review the explanations above and retake to clear."}
-												</p>
-											</div>
-
-											<div className="rounded-2xl border border-brand-200 bg-white p-4 text-center shadow-xs">
-												<span className="block font-extrabold font-mono text-2xl text-brand-ink">
-													{quizResult.score >= 60
-														? "+50 XP"
-														: "+0 XP"}
-												</span>
-												<span className="font-bold font-mono text-[0.64rem] text-ink-400 uppercase">
-													XP REWARD
-												</span>
-											</div>
-										</div>
-									</div>
-								) : null}
-							</div>
-						) : null}
-
-						{/* STAGE 6: Reflection */}
-						{stageId === "reflect" ? (
-							<div className="space-y-5">
-								<div className="rounded-2xl border border-brand-200/80 bg-gradient-to-br from-white to-amber-50/40 p-5 shadow-xs">
-									<div className="mb-1.5 flex items-center gap-2">
-										<span className="rounded-full border border-brand-300 bg-brand-50 px-2.5 py-0.5 font-bold font-mono text-[0.66rem] text-brand-ink uppercase">
-											CAREER PASSPORT RECAP
-										</span>
-										<span className="font-bold font-mono text-[0.7rem] text-brand-ink">
-											+50 XP
-										</span>
-									</div>
-									<h3 className="font-extrabold font-heading text-ink-900 text-xl">
-										Session Key Insights & Interview Prep
-									</h3>
-									<p className="mt-1 text-[0.86rem] text-ink-600 leading-relaxed">
-										Documenting key takeaways solidifies
-										retention for interview rounds and
-										portfolio artifacts.
-									</p>
-								</div>
-
-								<div className="space-y-4 pt-1">
-									{(kit.reflection || []).map(
-										(prompt, index) => (
-											<div
-												className="rounded-2xl border border-line bg-white p-4.5 shadow-xs transition-colors focus-within:border-brand-400 focus-within:ring-2 focus-within:ring-brand-100"
-												key={prompt}
-											>
-												<div className="mb-2 flex items-center justify-between">
-													<Label className="block font-bold text-ink-900 text-xs sm:text-sm">
-														{prompt}
-													</Label>
-													<span className="font-mono text-[0.68rem] text-ink-400">
-														Prompt 0{index + 1}
-													</span>
-												</div>
-												<Textarea
-													className="rounded-xl border-line/80 bg-canvas-muted/30 text-[0.86rem] focus:bg-white"
-													onChange={event =>
-														setReflectDraft(
-															prev => ({
-																...prev,
-																[index]:
-																	event.target
-																		.value,
-															}),
-														)
-													}
-													placeholder="Type your personal insights, key mental models, or code takeaways..."
-													rows={3}
-													value={
-														reflectDraft[index] ||
-														""
-													}
-												/>
-											</div>
-										),
-									)}
-								</div>
-							</div>
-						) : null}
-					</div>
-				</div>
-
-				{/* Right Sidebar: Module Quest Roadmap */}
-				<aside className="sticky top-[96px] h-fit rounded-3xl border border-line bg-white p-4.5 shadow-xs">
-					<div className="mb-3.5 flex items-center justify-between border-line border-b pb-2.5">
-						<span className="font-bold font-mono text-[0.7rem] text-ink-400 uppercase tracking-wider">
-							TRACK MODULES
-						</span>
-						<span className="rounded-full bg-canvas-muted px-2 py-0.5 font-bold font-mono text-[0.68rem] text-ink-600">
-							{Engine.teachingModules(activeSlug).length} Total
-						</span>
-					</div>
-
-					<div className="space-y-1.5">
-						{Engine.teachingModules(activeSlug).map(
-							({ lesson: item, index }) => {
-								const moduleDone = Engine.stagesDone(
-									state,
-									index,
-								)
-								const complete =
-									moduleDone.size === Engine.STAGES.length
-								const current = index === moduleIndex
 								return (
 									<button
-										className={cn(
-											"group flex w-full items-center justify-between gap-2.5 rounded-2xl p-2.5 text-left transition-all duration-200",
-											current
-												? "border border-brand-400 bg-brand-50/70 shadow-xs"
-												: complete
-													? "border border-emerald-100 bg-emerald-50/30 hover:bg-emerald-50/60"
-													: "border border-transparent hover:border-line hover:bg-canvas-muted",
-										)}
-										key={item.slug || index}
-										onClick={() => openModule(index)}
+										className={`flex items-center justify-center gap-1.5 rounded-xl border px-2 py-2.5 font-bold text-xs transition-all ${
+											isActive
+												? "border-brand-500 bg-brand-500 text-slate-950 shadow-sm ring-2 ring-brand-200"
+												: isDone
+													? "border-emerald-300 bg-emerald-50 text-emerald-900 hover:bg-emerald-100/60"
+													: "border-line bg-white text-ink-600 hover:border-brand-200 hover:bg-canvas-muted"
+										}`}
+										key={stg.id}
+										onClick={() => {
+											sound.playClick()
+											setStageId(stg.id)
+										}}
 										type="button"
 									>
-										<div className="flex min-w-0 items-center gap-2.5">
+										<span className="shrink-0 text-[11px]">
+											{isDone ? "✓" : meta.icon}
+										</span>
+										<span className="hidden truncate font-heading text-xs sm:inline">
+											{meta.short}
+										</span>
+									</button>
+								)
+							})}
+						</div>
+					</div>
+
+					{/* Main Interactive Stage Card */}
+					<main className="relative w-full">
+						<div className="relative overflow-hidden rounded-3xl border border-slate-200/90 bg-white p-6 shadow-md sm:p-8">
+							{/* Ambient soft glow at top of card */}
+							<div className="pointer-events-none absolute -top-20 left-1/2 h-36 w-96 -translate-x-1/2 rounded-full bg-amber-400/10 blur-3xl" />
+
+							{/* STAGE 1: Learn */}
+							{stageId === "concept" && (
+								<StageLearn
+									onStageComplete={handleStageCleared}
+									stageData={stage1Data}
+								/>
+							)}
+
+							{/* STAGE 2: See */}
+							{stageId === "demo" && (
+								<StageSee
+									onStageComplete={handleStageCleared}
+									stageData={stage2Data}
+								/>
+							)}
+
+							{/* STAGE 3: Practice */}
+							{stageId === "guided" && (
+								<StageTryTogether
+									onStageComplete={handleStageCleared}
+									stageData={stage3Data}
+								/>
+							)}
+
+							{/* STAGE 4: Challenge */}
+							{stageId === "task" && (
+								<StageTryAlone
+									onStageComplete={handleStageCleared}
+									stageData={stage4Data}
+								/>
+							)}
+
+							{/* STAGE 5: Check */}
+							{stageId === "quiz" && (
+								<StageCheck
+									onStageComplete={handleStageCleared}
+									stageData={stage5Data}
+								/>
+							)}
+
+							{/* STAGE 6: Reward */}
+							{stageId === "reflect" && (
+								<StageRecap
+									capabilityUnlock={
+										moduleData?.capability_unlock
+									}
+									careerUnlock={moduleData?.career_unlock}
+									onFinishModule={handleFinishModule}
+									stageData={stage6Data}
+								/>
+							)}
+						</div>
+					</main>
+				</div>
+
+				{/* RIGHT: Visible Track Modules Sidebar */}
+				<aside className="sticky top-20 space-y-4">
+					<div className="rounded-3xl border border-line bg-white p-5 shadow-xs">
+						{/* Sidebar Header & Course Progress */}
+						<div className="mb-4 space-y-2 border-line border-b pb-3.5">
+							<div className="flex items-center justify-between">
+								<span className="font-bold font-mono text-[0.68rem] text-brand-ink uppercase tracking-wider">
+									{program.title}
+								</span>
+								<span className="rounded-full bg-canvas-muted px-2 py-0.5 font-bold font-mono text-[0.65rem] text-ink-600">
+									{totalModules} Modules
+								</span>
+							</div>
+
+							<h3 className="font-extrabold font-heading text-base text-ink-900">
+								Curriculum Modules
+							</h3>
+
+							{/* Overall Progress Bar */}
+							<div className="space-y-1 pt-1">
+								<div className="flex items-center justify-between text-[0.68rem]">
+									<span className="font-medium text-ink-500">
+										Progress
+									</span>
+									<span className="font-bold font-mono text-brand-ink">
+										{completedModulesCount}/{totalModules}{" "}
+										Cleared ({overallProgressPct}%)
+									</span>
+								</div>
+								<div className="h-1.5 w-full overflow-hidden rounded-full bg-canvas-sunken">
+									<div
+										className="h-full rounded-full bg-brand-500 transition-all duration-500"
+										style={{
+											width: `${Math.max(overallProgressPct, 4)}%`,
+										}}
+									/>
+								</div>
+							</div>
+						</div>
+
+						{/* Module Cards List */}
+						<div className="scrollbar-thin max-h-[calc(100vh-280px)] space-y-2.5 overflow-y-auto pr-1">
+							{(program.curriculum || []).map((mod, idx) => {
+								const isCurrent = idx === moduleIndex
+								const modDone = Engine.stagesDone(
+									state,
+									idx,
+								).has("reflect")
+
+								return (
+									<button
+										className={`flex w-full items-center justify-between rounded-2xl border p-3.5 text-left transition-all duration-150 ${
+											isCurrent
+												? "border-2 border-brand-500 bg-amber-50/50 shadow-xs ring-2 ring-brand-100"
+												: modDone
+													? "border-emerald-300 bg-emerald-50/40 text-emerald-950 hover:border-emerald-400"
+													: "border-line bg-white text-ink-700 shadow-2xs hover:border-brand-200 hover:bg-canvas-muted"
+										}`}
+										key={idx}
+										onClick={() => {
+											sound.playClick()
+											openModule(idx, "concept")
+										}}
+										type="button"
+									>
+										<div className="flex min-w-0 items-center gap-3">
 											<span
-												className={cn(
-													"grid size-7 shrink-0 place-items-center rounded-xl font-bold font-mono text-xs transition-colors",
-													complete
-														? "bg-emerald-500 text-white shadow-xs"
-														: current
-															? "bg-brand-500 text-on-brand shadow-xs"
-															: "border border-line bg-white text-ink-600",
-												)}
+												className={`grid size-7 shrink-0 place-items-center rounded-xl font-bold font-mono text-xs ${
+													isCurrent
+														? "bg-brand-500 font-extrabold text-slate-950 shadow-xs"
+														: modDone
+															? "bg-emerald-500 font-extrabold text-white shadow-xs"
+															: "bg-canvas-muted text-ink-600"
+												}`}
 											>
-												{complete ? "✓" : index + 1}
+												{modDone ? (
+													<Check className="size-3.5 stroke-[3]" />
+												) : (
+													idx + 1
+												)}
 											</span>
 											<div className="min-w-0">
-												<strong className="block truncate font-bold font-heading text-[0.82rem] text-ink-900 transition-colors group-hover:text-brand-ink">
-													{item.title}
-												</strong>
-												<span className="block font-mono text-[0.66rem] text-ink-400">
-													{moduleDone.size}/
-													{Engine.STAGES.length}{" "}
-													stages
-												</span>
+												<h4
+													className={`truncate font-bold font-heading text-xs sm:text-sm ${
+														isCurrent
+															? "text-brand-ink"
+															: modDone
+																? "text-emerald-950"
+																: "text-ink-900"
+													}`}
+												>
+													{mod.title}
+												</h4>
+												<p className="font-medium font-mono text-[0.65rem] text-ink-400">
+													{modDone
+														? "Completed"
+														: isCurrent
+															? "Currently Learning"
+															: "Ready to learn"}
+												</p>
 											</div>
 										</div>
 
-										{current && (
-											<span className="size-2 shrink-0 rounded-full bg-brand-500" />
+										{isCurrent && (
+											<span className="shrink-0 rounded-full bg-brand-500 px-2 py-0.5 font-bold font-mono text-[0.62rem] text-slate-950 shadow-2xs">
+												Current
+											</span>
 										)}
 									</button>
 								)
-							},
-						)}
+							})}
+						</div>
 					</div>
 				</aside>
-			</div>
-
-			{/* Sticky Floating Bottom Bar */}
-			<div className="fixed inset-x-0 bottom-0 z-40 border-line border-t bg-white/95 px-5 py-3.5 shadow-lg backdrop-blur-md">
-				<div className="mx-auto flex max-w-[1280px] items-center justify-between gap-4">
-					<Button
-						disabled={stageIndex === 0 && moduleIndex === 0}
-						onClick={onPrev}
-						type="button"
-						variant="outline"
-					>
-						← Previous Stage
-					</Button>
-					<Button
-						className="shadow-[0_4px_15px_rgba(255,179,0,0.25)]"
-						onClick={onNext}
-						type="button"
-					>
-						{nextLabel}
-					</Button>
-				</div>
 			</div>
 		</div>
 	)

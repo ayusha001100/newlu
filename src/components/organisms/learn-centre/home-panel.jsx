@@ -119,6 +119,43 @@ export default function HomePanel() {
 				</div>
 			</section>
 
+			{/* Adaptive Microlearning Spotlight Banner */}
+			<div className="relative overflow-hidden rounded-[24px] border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-purple-500/10 p-5 shadow-sm sm:p-6">
+				<div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+					<div className="flex items-start gap-3.5">
+						<div className="grid size-12 shrink-0 place-items-center rounded-2xl bg-amber-500 font-black text-slate-950 text-xl shadow-amber-500/20 shadow-md">
+							🚀
+						</div>
+						<div>
+							<div className="flex items-center gap-2">
+								<span className="rounded-full bg-amber-500/20 px-2.5 py-0.5 font-bold font-mono text-[0.65rem] text-amber-600 uppercase tracking-wider dark:text-amber-400">
+									Duolingo / Brilliant Active Recall
+								</span>
+								<span className="font-bold text-[0.7rem] text-orange-500">
+									7-Day AI PM Sprint 🔥
+								</span>
+							</div>
+							<h3 className="mt-1 font-extrabold font-heading text-ink-900 text-lg tracking-tight">
+								Adaptive Microlearning Engine
+							</h3>
+							<p className="mt-0.5 max-w-xl text-ink-500 text-xs">
+								Experience bite-sized concept absorption,
+								procedural audio SFX, instant 2-way feedback
+								drawers, and real Career Vault unlocks.
+							</p>
+						</div>
+					</div>
+
+					<Link
+						className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-500 px-5 py-3 font-bold text-slate-950 text-xs shadow-amber-500/20 shadow-md transition-all hover:bg-amber-600 active:translate-y-0.5"
+						href="/microlearning"
+					>
+						<span>Enter Sprint Mode</span>
+						<span>→</span>
+					</Link>
+				</div>
+			</div>
+
 			<div className="grid grid-cols-1 gap-5 lg:grid-cols-[1.55fr_1fr]">
 				<div className="space-y-3.5">
 					<div className="flex items-center justify-between gap-3">

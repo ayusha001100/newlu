@@ -91,7 +91,7 @@ export const verifyOtpResult = body => {
 
 export const sessionResult = mobile => {
 	const value = String(mobile || "")
-	const user = value ? findUser(value) : null
+	const user = value ? findUser(value) || getOrCreateUser(value) : null
 
 	return {
 		data: { user },
@@ -102,7 +102,9 @@ export const sessionResult = mobile => {
 }
 
 export const updateProfileResult = (mobile, body) => {
-	const user = updateUserProfile(mobile, body)
+	const user =
+		updateUserProfile(mobile, body) ||
+		updateUserProfile(getOrCreateUser(mobile).mobile, body)
 	if (!user) {
 		return {
 			data: null,

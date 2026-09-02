@@ -1,4 +1,4 @@
-import { enrollUser, findUser } from "@/lib/data/auth-users"
+import { enrollUser, findUser, getOrCreateUser } from "@/lib/data/auth-users"
 import { stateFor } from "@/lib/data/progress"
 import { Engine } from "@/lib/learning/engine"
 
@@ -6,7 +6,7 @@ export async function POST(request) {
 	const body = await request.json()
 	const mobile = body.mobile || ""
 	const slug = body.slug || ""
-	const user = mobile ? findUser(mobile) : null
+	const user = mobile ? findUser(mobile) || getOrCreateUser(mobile) : null
 	if (!user) {
 		return Response.json({ message: "Not signed in" }, { status: 401 })
 	}
