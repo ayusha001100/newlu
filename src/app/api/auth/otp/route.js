@@ -1,23 +1,18 @@
-import { DEMO_OTP } from "@/lib/data/auth"
-import { findUser } from "@/lib/data/auth-users"
+import { sendOtpResult } from "@/lib/auth/handlers"
 
 export async function POST(request) {
 	const body = await request.json()
-	const mobile = String(body.mobile || "")
+	const result = sendOtpResult(body)
 
-	if (!mobile) {
+	if (result.error) {
 		return Response.json(
-			{ message: "Mobile number is required." },
-			{ status: 400 },
+			{ message: result.message },
+			{ status: result.status },
 		)
 	}
 
 	return Response.json({
-		message: `OTP sent — use ${DEMO_OTP}`,
-		results: {
-			demoOtp: DEMO_OTP,
-			mobile,
-			returning: Boolean(findUser(mobile)),
-		},
+		message: result.message,
+		results: result.data,
 	})
 }

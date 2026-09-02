@@ -1,9 +1,15 @@
 "use server"
 
 import { cookies } from "next/headers"
-import { fetchApi } from "@/services/fetch"
+import {
+	sendOtpResult,
+	sessionResult,
+	verifyOtpResult,
+} from "@/lib/auth/handlers"
 
 const SESSION_COOKIE = "lu_session"
+
+const toClientResult = ({ status, ...result }) => result
 
 const setSession = async mobile => {
 	const store = await cookies()
@@ -19,14 +25,10 @@ const clearSession = async () => {
 	store.delete(SESSION_COOKIE)
 }
 
-export const sendOtp = async payload =>
-	fetchApi("/api/auth/otp", { body: payload, method: "POST" })
+export const sendOtp = async payload => toClientResult(sendOtpResult(payload))
 
 export const verifyOtp = async payload => {
-	const result = await fetchApi("/api/auth/verify", {
-		body: payload,
-		method: "POST",
-	})
+	const result = toClientResult(verifyOtpResult(payload))
 	if (!result.error && result.data?.user?.mobile) {
 		await setSession(result.data.user.mobile)
 	}
@@ -37,7 +39,7 @@ export const getSession = async () => {
 	const store = await cookies()
 	const mobile = store.get(SESSION_COOKIE)?.value
 	if (!mobile) return { data: { user: null }, error: false, message: "" }
-	return fetchApi(`/api/auth/session?mobile=${encodeURIComponent(mobile)}`)
+	return toClientResult(sessionResult(mobile))
 }
 
 export const logout = async () => {

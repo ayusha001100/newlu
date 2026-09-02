@@ -1,11 +1,11 @@
-import { findUser } from "@/lib/data/auth-users"
+import { sessionResult } from "@/lib/auth/handlers"
 
 export function GET(request) {
 	const mobile = request.nextUrl.searchParams.get("mobile") || ""
-	const user = mobile ? findUser(mobile) : null
+	const result = sessionResult(mobile)
 
 	return Response.json({
-		message: "",
-		results: { user },
+		message: result.message,
+		results: result.data,
 	})
 }

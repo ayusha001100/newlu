@@ -1,32 +1,18 @@
-import { DEMO_OTP, SEED_USER } from "@/lib/data/auth"
-import { attachReferral, enrollUser, findUser } from "@/lib/data/auth-users"
+import { verifyOtpResult } from "@/lib/auth/handlers"
 
 export async function POST(request) {
 	const body = await request.json()
-	const otp = String(body.otp || "")
-	const enroll = body.enroll || null
+	const result = verifyOtpResult(body)
 
-	if (otp.length !== 6) {
+	if (result.error) {
 		return Response.json(
-			{ message: "Please enter all 6 digits." },
-			{ status: 400 },
+			{ message: result.message },
+			{ status: result.status },
 		)
 	}
 
-	if (otp !== DEMO_OTP) {
-		return Response.json(
-			{ message: `Incorrect OTP. For this mockup, use ${DEMO_OTP}.` },
-			{ status: 400 },
-		)
-	}
-
-	const enrolled = enrollUser(findUser(SEED_USER.mobile) || SEED_USER, enroll)
-	const user = attachReferral(enrolled, {
-		guestCode: body.guestCode || "",
-		referredBy: body.referredBy || "",
-	})
 	return Response.json({
-		message: `Welcome back, ${user.name.split(" ")[0]}!`,
-		results: { returning: true, user },
+		message: result.message,
+		results: result.data,
 	})
 }
