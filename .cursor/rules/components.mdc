@@ -1,0 +1,25 @@
+---
+description: Atomic placement and import aliases for UI components
+globs: src/components/**
+alwaysApply: false
+---
+
+# Placement
+
+- **ui** — shadcn primitives only. Restyle variants to match LetsUpgrade gold, radius, and type.
+- **atoms** — one UI concern (Logo, Eyebrow, StarRating).
+- **molecules** — a few atoms (ProgramCard, PhoneField, StageStrip).
+- **organisms** — a page section (SiteHeader, Hero, ModulePlayer).
+
+If a component needs several files, use a folder named after that component. Do not bucket by route (`organisms/home/`).
+
+# Imports
+
+```js
+import { Button } from "@/ui/button"
+import Logo from "@/atoms/logo"
+import ProgramCard from "@/molecules/program-card"
+import SiteHeader from "@/organisms/site-header"
+```
+
+Use Tailwind on the element. Do not add CSS modules or ported class names from `style.css`.

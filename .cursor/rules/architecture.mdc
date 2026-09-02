@@ -1,0 +1,27 @@
+---
+description: Atomic folders, Tailwind inline, shadcn, keep LU IDea UI
+alwaysApply: true
+---
+
+# Keep the UI
+
+Match the LU IDea mock. Do not restyle to default shadcn look. Do not port `style.css` class names.
+
+# Tailwind
+
+Put utilities on the element. `globals.css` holds theme tokens and existing base only — no new `.hero` / `.btn-primary` classes.
+
+# Components
+
+UI lives only in the existing tree:
+
+- `src/components/ui` — shadcn primitives (restyle these to match LU)
+- `src/components/atoms`
+- `src/components/molecules`
+- `src/components/organisms`
+
+Do not add `src/modules`, `src/features`, or a second `components` folder. Group extra files by component name only (`organisms/site-header/`), never by page or feature.
+
+# shadcn first
+
+Use `@/ui/*`. If a primitive is missing, add an atom or molecule. Allowed non-UI folders: `src/app`, `src/lib`, `src/schemas`, `src/store`, `src/providers`.

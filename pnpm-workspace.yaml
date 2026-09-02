@@ -1,0 +1,13 @@
+packages:
+  - '.'
+allowBuilds:
+  sharp: false
+  unrs-resolver: false
+
+# launchpad: non-interactive scaffold — allow dependency lifecycle scripts.
+strictDepBuilds: false
+dangerouslyAllowAllBuilds: true
+
+# launchpad: dependency version overrides for release tooling.
+overrides:
+  react-is: "^19.0.0-rc-69d4b800-20241021"

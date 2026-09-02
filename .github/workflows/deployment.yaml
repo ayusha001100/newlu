@@ -1,0 +1,108 @@
+name: Vercel Deployment Invocator
+
+on:
+  push:
+
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'main'
+
+jobs:
+  create-deploy-branch:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/') # This ensures the workflow only runs for branches
+    steps:
+    # Step 1: Checkout the code from the repository
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Step 2: Configure Git user settings
+    - name: Configure Git
+      run: |
+        git config --global user.email "server@letsupgrade.in"
+        git config --global user.name "lu-rocketship"
+        echo "Global Git configuration:"
+        git config --global --list
+        git remote -v
+
+    # Step 3: Create or checkout the deploy branch
+    - name: Create or checkout deploy branch
+      id: create_or_checkout_branch
+      run: |
+        # Extract the name of the current branch
+        ORIGINAL_BRANCH=$(echo "${GITHUB_REF#refs/heads/}")
+        DEPLOY_BRANCH="${ORIGINAL_BRANCH}-deploy"
+
+        echo "ORIGINAL_BRANCH=$ORIGINAL_BRANCH" >> $GITHUB_ENV
+        echo "DEPLOY_BRANCH=$DEPLOY_BRANCH" >> $GITHUB_ENV
+
+        echo "Original branch: $ORIGINAL_BRANCH"
+        echo "Deploy branch: $DEPLOY_BRANCH"
+
+        # Check if the deploy branch already exists
+        if git show-ref --verify --quiet "refs/heads/$DEPLOY_BRANCH"; then
+          # Checkout to the existing deploy branch
+          git checkout "$DEPLOY_BRANCH"
+          echo "Checked out to existing deploy branch: $DEPLOY_BRANCH"
+          # Merge the original branch into the deploy branch
+          git merge "$ORIGINAL_BRANCH"
+          echo "Merged $ORIGINAL_BRANCH into $DEPLOY_BRANCH"
+        else
+          # Create and switch to the new deploy branch
+          git checkout -b "$DEPLOY_BRANCH"
+          echo "Created and checked out new branch: $DEPLOY_BRANCH"
+        fi
+
+    # Step 4: Prepare deployment information
+    - name: Prepare deployment information
+      run: |
+        # Get the message of the most recent commit
+        PREVIOUS_COMMIT_MSG=$(git log -1 --pretty=%B)
+        echo "PREVIOUS_COMMIT_MSG=$PREVIOUS_COMMIT_MSG" >> $GITHUB_ENV
+        echo "Previous commit message: $PREVIOUS_COMMIT_MSG"
+
+        # Create a deploy_info.txt file with deployment details
+        echo "Deployment Info" > deploy_info.txt
+        echo "Branch: $ORIGINAL_BRANCH" >> deploy_info.txt
+        echo "Deploy Branch: $DEPLOY_BRANCH" >> deploy_info.txt
+        echo "Timestamp: $(date -u)" >> deploy_info.txt
+        echo "Deployment information has been prepared."
+
+    # Step 5: Commit the deployment information
+    - name: Commit deployment information
+      run: |
+        # Add the deploy_info.txt file to the repository
+        git add deploy_info.txt
+
+        # Commit with the previous commit message
+        git commit -m "$PREVIOUS_COMMIT_MSG"
+        echo "Committed with previous commit message: $PREVIOUS_COMMIT_MSG"
+
+    # Step 6: Push the deploy branch to the remote repository
+    - name: Push deploy branch
+      run: |
+        git push --set-upstream origin "$DEPLOY_BRANCH" -f
+        echo "Pushed branch: $DEPLOY_BRANCH"
+
+    # Step 7: Clean up local branches
+    - name: Clean up local branches
+      run: |
+        # Switch back to the original branch
+        git checkout "$ORIGINAL_BRANCH"
+        echo "Checked out original branch: $ORIGINAL_BRANCH"
+
+        # Delete the local and remote deploy branch if it's not main-deploy, staging-deploy, or dev-deploy
+        if [[ "$DEPLOY_BRANCH" != "main-deploy" && "$DEPLOY_BRANCH" != "staging-deploy" && "$DEPLOY_BRANCH" != "dev-deploy" ]]; then
+          # Delete the local branch
+          git branch -d "$DEPLOY_BRANCH"
+          echo "Deleted local branch: $DEPLOY_BRANCH"
+
+          # Delete the remote branch
+          git push origin --delete "$DEPLOY_BRANCH"
+          echo "Deleted remote branch: $DEPLOY_BRANCH"
+        else
+          echo "Skipped deleting branch: $DEPLOY_BRANCH"
+        fi

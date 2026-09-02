@@ -1,0 +1,30 @@
+---
+description: LetsUpgrade product context, dummy auth, and what is already built
+alwaysApply: true
+---
+
+# Product
+
+LetsUpgrade: free certs for Indian students. Loop: learn → project → internships/jobs.
+
+Full map: [CONTEXT.md](CONTEXT.md). Visual source (copy/layout only, no CSS classes): `/Users/akashlakade/Downloads/LU IDea`.
+
+# Built now
+
+- `/` home, `/programs` catalogue
+- `/program/[id]` live track landing, `/bootcamp/[id]` recorded bootcamp landing
+- `/auth` dummy login only (mobile + OTP `123456` → always Riya Sharma). No profile/signup.
+- `/learn` Learning Centre — auth-gated. Tabs: Home, Learn, Opportunities, Career, Profile. Module player (6 stages), AI tutor drawer, course entry, enroll via `?course=`
+- `/internships` internship board, `/jobs` fresher jobs board
+- `/colleges` campus partnerships plus upskilling, certifications, placement, hire-ready, and contact pages
+- `/resources` career guides, skill-fit check, events, community, help center
+- `/blog` career guides plus four long-form articles
+- `/refer` share link, WhatsApp, invite count after a classmate logs in
+
+# Auth
+
+Keep dummy. Do not add real OTP, email/password, or a profile step unless asked.
+
+# Data
+
+Catalogues: `src/lib/data`. Engine: `src/lib/learning/engine.js`. Images: `public/assets`.

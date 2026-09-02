@@ -1,0 +1,539 @@
+/*** 1. IMPORTS ***/
+@import "tailwindcss";
+@import "shadcn/tailwind.css";
+@import "tw-animate-css";
+
+/*** 2. PLUGINS ***/
+@plugin "tailwindcss-animate";
+@plugin "@tailwindcss/typography";
+
+/*** 3. CUSTOM VARIANTS ***/
+@custom-variant dark (&:is(.dark *));
+
+/*** 4. THEMES ***/
+@theme {
+	--breakpoint-*: initial;
+	--breakpoint-xs: 476px;
+	--breakpoint-sm: 640px;
+	--breakpoint-md: 768px;
+	--breakpoint-lg: 1024px;
+	--breakpoint-xl: 1280px;
+	--breakpoint-nav: 1321px;
+	--breakpoint-2xl: 1536px;
+
+	--font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+	--font-heading:
+		var(--font-plus-jakarta), var(--font-manrope), ui-sans-serif, system-ui,
+		sans-serif;
+	--font-mono: var(--font-geist-mono);
+
+	--color-brand-50: #fff9ec;
+	--color-brand-100: #ffefc9;
+	--color-brand-200: #ffe1a3;
+	--color-brand-400: #ffc94a;
+	--color-brand-500: #ffb300;
+	--color-brand-550: #f2a400;
+	--color-brand-600: #d68a00;
+	--color-brand-ink: #7a4e00;
+	--color-on-brand: #1a1200;
+	--color-ink-300: #98a2b1;
+	--color-ink-500: #6b7686;
+	--color-ink-700: #3e4756;
+	--color-ink-800: #1b212b;
+	--color-ink-900: #10141b;
+	--color-line: #e4e8ee;
+	--color-line-strong: #d2d9e3;
+	--color-canvas: #ffffff;
+	--color-canvas-muted: #f8f9fb;
+	--color-canvas-sunken: #edf0f5;
+	--color-success: #16a34a;
+
+	--shadow-lu-sm:
+		0 1px 2px rgba(16, 20, 27, 0.06), 0 2px 8px rgba(16, 20, 27, 0.04);
+	--shadow-lu-md:
+		0 4px 12px rgba(16, 20, 27, 0.06), 0 16px 40px rgba(16, 20, 27, 0.08);
+	--shadow-lu-lg:
+		0 8px 20px rgba(16, 20, 27, 0.08), 0 32px 70px rgba(16, 20, 27, 0.14);
+	--shadow-lu-brand:
+		0 8px 20px rgba(214, 138, 0, 0.28),
+		inset 0 1px 0 rgba(255, 255, 255, 0.55);
+
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) + 4px);
+
+	--height-screen: calc(var(--vh, 1vh) * 100);
+
+	--text-3xs: 0.5rem;
+	--text-3xs--line-height: 0.5rem;
+	--text-2xs: 0.625rem;
+	--text-2xs--line-height: 0.75rem;
+
+	--animate-accordion-down: accordion-down 0.2s ease-out;
+	--animate-accordion-up: accordion-up 0.2s ease-out;
+	--animate-expand-width: expandWidth infinite linear;
+	--animate-expand-height: expandHeight linear;
+
+	@keyframes accordion-down {
+		from {
+			height: 0;
+		}
+
+		to {
+			height: var(--radix-accordion-content-height);
+		}
+	}
+
+	@keyframes accordion-up {
+		from {
+			height: var(--radix-accordion-content-height);
+		}
+
+		to {
+			height: 0;
+		}
+	}
+
+	@keyframes expandWidth {
+		0% {
+			width: 0%;
+		}
+
+		100% {
+			width: 100%;
+		}
+	}
+
+	@keyframes expandHeight {
+		0% {
+			height: 0%;
+		}
+
+		100% {
+			height: 100%;
+		}
+	}
+
+	--animate-ticker: ticker-scroll 112s linear infinite;
+	--animate-hiring: ticker-scroll 192s linear infinite;
+	--animate-pulse-dot: pulse-dot 2s infinite;
+	--animate-sticker: sticker-float 5.4s ease-in-out infinite;
+	--animate-float-y: float-y 5s ease-in-out infinite;
+	--animate-float-y-late: float-y 5s 1.4s ease-in-out infinite;
+	--animate-glow-drift: glow-drift 9s ease-in-out infinite alternate;
+	--animate-hero-badge: hero-rise 0.7s both cubic-bezier(0.22, 1, 0.36, 1);
+	--animate-hero-title: hero-rise 0.75s 0.08s both
+		cubic-bezier(0.22, 1, 0.36, 1);
+	--animate-hero-sub: hero-rise 0.75s 0.2s both cubic-bezier(0.22, 1, 0.36, 1);
+	--animate-hero-cta: hero-rise 0.75s 0.32s both
+		cubic-bezier(0.22, 1, 0.36, 1);
+	--animate-hero-proof: hero-rise 0.75s 0.44s both
+		cubic-bezier(0.22, 1, 0.36, 1);
+	--animate-hero-visual: hero-visual-in 0.9s 0.24s both
+		cubic-bezier(0.22, 1, 0.36, 1);
+	--animate-nav-panel: nav-panel-in 0.16s ease-out;
+	--animate-shimmer: shimmer-sweep 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+
+	@keyframes shimmer-sweep {
+		0% {
+			transform: translateX(-160%) skewX(-20deg);
+		}
+		40%,
+		100% {
+			transform: translateX(240%) skewX(-20deg);
+		}
+	}
+
+	@keyframes ticker-scroll {
+		from {
+			transform: translateX(0);
+		}
+
+		to {
+			transform: translateX(-50%);
+		}
+	}
+
+	@keyframes pulse-dot {
+		0% {
+			box-shadow: 0 0 0 0 rgba(var(--success-rgb), 0.45);
+		}
+
+		70% {
+			box-shadow: 0 0 0 10px rgba(var(--success-rgb), 0);
+		}
+
+		100% {
+			box-shadow: 0 0 0 0 rgba(var(--success-rgb), 0);
+		}
+	}
+
+	@keyframes sticker-float {
+		0%,
+		100% {
+			transform: rotate(-2.4deg) translateY(0);
+		}
+
+		50% {
+			transform: rotate(-2.4deg) translateY(-7px);
+		}
+	}
+
+	@keyframes float-y {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+
+		50% {
+			transform: translateY(-10px);
+		}
+	}
+
+	@keyframes glow-drift {
+		from {
+			transform: translate3d(0, 0, 0) scale(1);
+		}
+
+		to {
+			transform: translate3d(-50px, 45px, 0) scale(1.08);
+		}
+	}
+
+	@keyframes hero-rise {
+		from {
+			opacity: 0;
+			transform: translateY(24px);
+		}
+
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+
+	@keyframes hero-visual-in {
+		from {
+			opacity: 0;
+			transform: translateX(36px) scale(0.97);
+		}
+
+		to {
+			opacity: 1;
+			transform: translateX(0) scale(1);
+		}
+	}
+
+	@keyframes nav-panel-in {
+		from {
+			opacity: 0;
+			transform: translateY(-6px);
+		}
+
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+}
+
+@theme inline {
+	--font-sans: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+	--font-heading:
+		var(--font-plus-jakarta), var(--font-manrope), ui-sans-serif, system-ui,
+		sans-serif;
+	--font-mono: var(--font-geist-mono);
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-destructive: var(--destructive);
+	--color-destructive-foreground: var(--destructive-foreground);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--color-chart-1: var(--chart-1);
+	--color-chart-2: var(--chart-2);
+	--color-chart-3: var(--chart-3);
+	--color-chart-4: var(--chart-4);
+	--color-chart-5: var(--chart-5);
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) + 4px);
+	--color-sidebar: var(--sidebar);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-ring: var(--sidebar-ring);
+	--animate-accordion-down: accordion-down 0.2s ease-out;
+	--animate-accordion-up: accordion-up 0.2s ease-out;
+	--radius-2xl: calc(var(--radius) * 1.8);
+	--radius-3xl: calc(var(--radius) * 2.2);
+	--radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*** 5. ROOT VARIABLES ***/
+:root {
+	--brand-600: #d68a00;
+	--brand-550: #f2a400;
+	--brand-500: #ffb300;
+	--brand-400: #ffc94a;
+	--brand-200: #ffe1a3;
+	--brand-100: #ffefc9;
+	--brand-050: #fff9ec;
+	--brand-ink: #7a4e00;
+	--on-brand: #1a1200;
+	--brand-rgb: 255, 179, 0;
+	--brand-600-rgb: 214, 138, 0;
+	--success: #16a34a;
+	--success-rgb: 22, 163, 74;
+	--ink-900: #10141b;
+	--ink-800: #1b212b;
+	--ink-700: #3e4756;
+	--ink-500: #6b7686;
+	--ink-300: #98a2b1;
+	--bg-000: #ffffff;
+	--bg-050: #f8f9fb;
+	--bg-100: #edf0f5;
+	--line: #e4e8ee;
+	--line-strong: #d2d9e3;
+	--track-600: var(--brand-600);
+	--track-500: var(--brand-500);
+	--track-400: var(--brand-400);
+	--track-200: var(--brand-200);
+	--track-100: var(--brand-100);
+	--track-050: var(--brand-050);
+	--track-ink: var(--brand-ink);
+	--track-rgb: var(--brand-rgb);
+	--radius: 0.75rem;
+	--card: #ffffff;
+	--card-foreground: #10141b;
+	--popover: #ffffff;
+	--popover-foreground: #10141b;
+	--primary: #ffb300;
+	--primary-foreground: #1a1200;
+	--secondary: #f8f9fb;
+	--secondary-foreground: #10141b;
+	--muted: #f8f9fb;
+	--muted-foreground: #6b7686;
+	--accent: #fff9ec;
+	--accent-foreground: #7a4e00;
+	--destructive: oklch(0.577 0.245 27.325);
+	--border: #e4e8ee;
+	--input: #e4e8ee;
+	--ring: #ffb300;
+	--chart-1: oklch(0.87 0 0);
+	--chart-2: oklch(0.556 0 0);
+	--chart-3: oklch(0.439 0 0);
+	--chart-4: oklch(0.371 0 0);
+	--chart-5: oklch(0.269 0 0);
+	--sidebar: #ffffff;
+	--sidebar-foreground: #10141b;
+	--sidebar-primary: #ffb300;
+	--sidebar-primary-foreground: #1a1200;
+	--sidebar-accent: #fff9ec;
+	--sidebar-accent-foreground: #7a4e00;
+	--sidebar-border: #e4e8ee;
+	--sidebar-ring: #ffb300;
+	--background: #ffffff;
+	--foreground: #10141b;
+	--header-h: 76px;
+}
+
+@media (width < 720px) {
+	:root {
+		--header-h: 68px;
+	}
+}
+
+.dark {
+	--background: oklch(0.145 0 0);
+	--foreground: oklch(0.985 0 0);
+	--card: oklch(0.205 0 0);
+	--card-foreground: oklch(0.985 0 0);
+	--popover: oklch(0.205 0 0);
+	--popover-foreground: oklch(0.985 0 0);
+	--primary: #ffb300;
+	--primary-foreground: #1a1200;
+	--secondary: oklch(0.269 0 0);
+	--secondary-foreground: oklch(0.985 0 0);
+	--muted: oklch(0.269 0 0);
+	--muted-foreground: oklch(0.708 0 0);
+	--accent: oklch(0.269 0 0);
+	--accent-foreground: oklch(0.985 0 0);
+	--destructive: oklch(0.704 0.191 22.216);
+	--border: oklch(1 0 0 / 10%);
+	--input: oklch(1 0 0 / 15%);
+	--ring: #ffb300;
+	--chart-1: oklch(0.87 0 0);
+	--chart-2: oklch(0.556 0 0);
+	--chart-3: oklch(0.439 0 0);
+	--chart-4: oklch(0.371 0 0);
+	--chart-5: oklch(0.269 0 0);
+	--sidebar: oklch(0.205 0 0);
+	--sidebar-foreground: oklch(0.985 0 0);
+	--sidebar-primary: oklch(0.488 0.243 264.376);
+	--sidebar-primary-foreground: oklch(0.985 0 0);
+	--sidebar-accent: oklch(0.269 0 0);
+	--sidebar-accent-foreground: oklch(0.985 0 0);
+	--sidebar-border: oklch(1 0 0 / 10%);
+	--sidebar-ring: oklch(0.556 0 0);
+}
+
+/*** 6. UTILITY CLASSES ***/
+@utility container {
+	margin-inline: auto;
+	width: 100%;
+	max-width: 1200px;
+	padding-inline: 24px;
+
+	@media (width < 720px) {
+		padding-inline: 18px;
+	}
+}
+
+@utility scrollbar-hide {
+	/* IE and Edge */
+	-ms-overflow-style: none;
+
+	/* Firefox */
+	scrollbar-width: none;
+
+	/* Hide scrollbar for Safari and Chrome */
+	&::-webkit-scrollbar {
+		display: none;
+	}
+}
+
+/* Show and style scrollbar */
+@utility scrollbar {
+	/* IE and Edge */
+	-ms-overflow-style: auto;
+
+	/* Firefox */
+	scrollbar-width: auto;
+
+	/* Webkit (Chrome, Safari) scrollbar styling */
+	&::-webkit-scrollbar {
+		display: block;
+		width: 6px;
+		height: 6px;
+	}
+
+	&::-webkit-scrollbar-track {
+		background: transparent;
+	}
+
+	&::-webkit-scrollbar-thumb {
+		background: rgba(136, 136, 136, 0);
+		border-radius: 35px;
+	}
+
+	&::-webkit-scrollbar-thumb:hover {
+		background: #555;
+	}
+
+	&::-webkit-scrollbar-corner {
+		background: transparent;
+	}
+
+	/* Change scrollbar thumb color on hover */
+	&:hover::-webkit-scrollbar-thumb {
+		background: #888;
+	}
+}
+
+/*** 7. BASE STYLES ***/
+@layer base {
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-gray-200, currentColor);
+	}
+
+	input[type="number"]::-webkit-inner-spin-button,
+	input[type="number"]::-webkit-outer-spin-button {
+		-webkit-appearance: none;
+		appearance: none;
+		margin: 0;
+	}
+
+	input:-webkit-autofill,
+	input:-webkit-autofill:hover,
+	input:-webkit-autofill:focus,
+	input:-webkit-autofill:active {
+		transition:
+			background-color 5000s ease-in-out 0s,
+			color 5000s ease-in-out 0s;
+		transition-delay:
+			background-color 5000s,
+			color 5000s;
+	}
+
+	img {
+		@apply select-none;
+	}
+
+	[class^="overflow"] {
+		@apply scrollbar;
+	}
+
+	@layer base {
+		button:not(:disabled),
+		[role="button"]:not(:disabled) {
+			cursor: pointer;
+		}
+	}
+	* {
+		@apply border-border;
+	}
+
+	a:focus-visible,
+	button:focus-visible,
+	[role="button"]:focus-visible {
+		outline: 3px solid rgba(0, 0, 0, 0.28);
+		outline-offset: 3px;
+	}
+
+	html {
+		@apply scroll-smooth font-sans;
+	}
+
+	body {
+		@apply bg-background text-ink-700 antialiased;
+		letter-spacing: -0.005em;
+		line-height: 1.6;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4 {
+		@apply font-heading font-extrabold text-ink-900;
+		letter-spacing: -0.03em;
+		line-height: 1.15;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+}

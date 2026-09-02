@@ -1,0 +1,185 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.5.8/schema.json",
+    "assist": {
+        "actions": {
+            "source": {
+                "organizeImports": "on",
+                "useSortedAttributes": "on",
+                "useSortedKeys": "off"
+            }
+        }
+    },
+    "css": {
+        "parser": {
+            "tailwindDirectives": true
+        }
+    },
+    "files": {
+        "ignoreUnknown": true,
+        "includes": [
+            "**",
+            "!**/node_modules",
+            "!**/.next",
+            "!**/.expo",
+            "!**/.turbo",
+            "!**/dist",
+            "!**/build",
+            "!**/out",
+            "!**/.storybook",
+            "!**/.vercel"
+        ]
+    },
+    "formatter": {
+        "enabled": true,
+        "formatWithErrors": false,
+        "indentStyle": "tab",
+        "indentWidth": 4,
+        "lineWidth": 80
+    },
+    "javascript": {
+        "formatter": {
+            "arrowParentheses": "asNeeded",
+            "attributePosition": "auto",
+            "bracketSameLine": false,
+            "bracketSpacing": true,
+            "jsxQuoteStyle": "double",
+            "quoteProperties": "asNeeded",
+            "quoteStyle": "double",
+            "semicolons": "asNeeded",
+            "trailingCommas": "all"
+        },
+        "globals": [
+            "console",
+            "__DEV__",
+            "shared-node-browser"
+        ],
+        "jsxRuntime": "transparent"
+    },
+    "linter": {
+        "domains": {
+            "next": "recommended",
+            "react": "recommended"
+        },
+        "enabled": true,
+        "rules": {
+            "complexity": {
+                "noExcessiveCognitiveComplexity": "warn",
+                "noVoid": "error",
+                "useSimplifiedLogicExpression": "error"
+            },
+            "correctness": {
+                "noUndeclaredVariables": "error",
+                "noUnusedImports": {
+                    "fix": "safe",
+                    "level": "error"
+                },
+                "noUnusedPrivateClassMembers": "error",
+                "noUnusedVariables": "error",
+                "useExhaustiveDependencies": {
+                    "level": "error",
+                    "options": {
+                        "reportMissingDependenciesArray": true,
+                        "reportUnnecessaryDependencies": true
+                    }
+                }
+            },
+            "nursery": {
+                "useSortedClasses": {
+                    "fix": "safe",
+                    "level": "error",
+                    "options": {
+                        "attributes": [
+                            "className"
+                        ],
+                        "functions": [
+                            "cn",
+                            "clsx"
+                        ]
+                    }
+                }
+            },
+            "recommended": true,
+            "security": {
+                "noDangerouslySetInnerHtmlWithChildren": "error",
+                "noGlobalEval": "error"
+            },
+            "style": {
+                "useFragmentSyntax": "error",
+                "useImportType": {
+                    "fix": "safe",
+                    "level": "error",
+                    "options": {
+                        "style": "separatedType"
+                    }
+                },
+                "useSelfClosingElements": {
+                    "fix": "safe",
+                    "level": "error",
+                    "options": {}
+                }
+            },
+            "suspicious": {
+                "noArrayIndexKey": "warn",
+                "noExplicitAny": "error",
+                "noUnknownAtRules": "off",
+                "useAwait": "warn"
+            }
+        }
+    },
+    "overrides": [
+        {
+            "includes": [
+                "**/*.ts",
+                "**/*.tsx"
+            ],
+            "linter": {
+                "rules": {
+                    "style": {
+                        "useConsistentArrayType": {
+                            "level": "warn",
+                            "options": {
+                                "syntax": "shorthand"
+                            }
+                        }
+                    },
+                    "suspicious": {
+                        "noDuplicateClassMembers": "warn",
+                        "noExtraNonNullAssertion": "warn",
+                        "noRedeclare": "warn"
+                    }
+                }
+            }
+        },
+        {
+            "includes": [
+                "**/__tests__/**",
+                "**/*.{test,spec}.{ts,tsx,js,jsx}"
+            ],
+            "linter": {
+                "rules": {
+                    "correctness": {
+                        "noUnusedVariables": "off"
+                    }
+                }
+            }
+        },
+        {
+            "includes": [
+                "src/**/*.{js,ts,jsx,tsx,json}"
+            ],
+            "assist": {
+                "actions": {
+                    "source": {
+                        "useSortedKeys": "on"
+                    }
+                }
+            }
+        }
+    ],
+    "root": true,
+    "vcs": {
+        "clientKind": "git",
+        "enabled": true,
+        "useIgnoreFile": true
+    }
+}

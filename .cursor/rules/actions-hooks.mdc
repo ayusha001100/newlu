@@ -1,0 +1,34 @@
+---
+description: API calls go actions then TanStack hooks; UI never imports actions
+globs: src/actions/**,src/hooks/**,src/services/**
+alwaysApply: false
+---
+
+# Data flow
+
+```
+page / organism
+  → hook in src/hooks/{module}/
+    → action in src/actions/{module}.js
+      → customFetch in src/services/fetch.js
+```
+
+# Actions
+
+One file per module (`auth.js`, `programs.js`). Mark `"use server"`. Every request uses `customFetch` from `@/services/fetch`. Do not call `fetch` directly.
+
+# Hooks
+
+One folder per module (`src/hooks/auth/`, `src/hooks/programs/`). Wrap actions with `useQuery` / `useMutation`. Pages and components import hooks only.
+
+```js
+// BAD — UI or page
+import { sendOtp } from "@/actions/auth"
+
+// GOOD
+import { useSendOtp } from "@/hooks/auth/useSendOtp"
+```
+
+Static catalogues in `src/lib/data` may be imported directly. Auth, progress, apply, refer, and tutor must go through this path.
+
+Auth is dummy (`src/actions/auth.js` → `/api/auth/*`). Keep that contract; do not call a production login API unless asked.
