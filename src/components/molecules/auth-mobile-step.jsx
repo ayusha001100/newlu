@@ -103,7 +103,7 @@ export default function AuthMobileStep({
 				</strong>
 				Enter any mobile number. Demo OTP is{" "}
 				<code className="font-bold text-brand-ink">{DEMO_OTP}</code>.
-				You always sign in as Riya Sharma.
+				After login you’ll set your name and profile answers.
 			</div>
 		</div>
 	)

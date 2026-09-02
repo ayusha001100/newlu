@@ -1,3 +1,5 @@
+import { isProfileComplete } from "@/lib/data/onboarding"
+
 export const DEMO_OTP = "123456"
 
 export const COUNTRIES = [
@@ -168,14 +170,19 @@ export const INDIA_PIN_FALLBACK = {
 
 export const SEED_USER = {
 	city: "Mumbai",
+	college: "Mumbai University",
 	country: "India",
 	education: "Undergraduate (pursuing)",
 	enrolled: ["generative-ai", "data-analytics"],
 	goals: { "generative-ai": ["Get a job", "Certificate"] },
+	interests: ["Generative AI", "Data Analytics"],
 	mobile: "+919876543210",
 	name: "Riya Sharma",
 	pincode: "400001",
+	profileComplete: true,
+	purpose: "Get an internship",
 	state: "Maharashtra",
+	year: "2025",
 }
 
 export const ALLOWED_RETURN_PATHS = [
@@ -190,6 +197,7 @@ export const countryByCode = code =>
 
 export const afterAuthPath = ({ enroll, returnTo, user }) => {
 	if (enroll) return `/learn?course=${encodeURIComponent(enroll)}`
+	if (user && !isProfileComplete(user)) return "/learn"
 	const path = (returnTo || "").split("?")[0]
 	if (path && ALLOWED_RETURN_PATHS.includes(path)) return returnTo
 	if (user?.enrolled?.length) return "/learn"

@@ -111,8 +111,11 @@ export default function AuthCard() {
 				onError: error => setOtpError(error.message),
 				onSuccess: data => {
 					clearPendingRef()
+					const first = data.user?.name?.split(" ")[0]
 					toast.add({
-						title: `Welcome back, ${data.user.name.split(" ")[0]}!`,
+						title: first
+							? `Welcome back, ${first}!`
+							: "You're in — next, set up your profile.",
 					})
 					goNext(data.user)
 				},

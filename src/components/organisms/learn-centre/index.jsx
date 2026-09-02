@@ -10,6 +10,7 @@ import { useProgress } from "@/hooks/learn/useProgress"
 import { useSaveProgress } from "@/hooks/learn/useSaveProgress"
 import { useUpdateLearner } from "@/hooks/learn/useUpdateLearner"
 import { enrolledRows, LEARN_TABS, streakDays } from "@/lib/data/learn"
+import { firstNameOf, isProfileComplete } from "@/lib/data/onboarding"
 import { Engine } from "@/lib/learning/engine"
 import { cn } from "@/lib/utils"
 import ProgramPill from "@/molecules/program-pill"
@@ -114,6 +115,11 @@ export default function LearnCentre() {
 		if (session.isLoading) return
 		if (!user) router.replace("/auth?returnTo=/learn")
 	}, [router, session.isLoading, user])
+
+	useEffect(() => {
+		if (!user) return
+		if (!isProfileComplete(user)) setShowOnboard(true)
+	}, [user])
 
 	useEffect(() => {
 		const course = searchParams.get("course")
@@ -367,22 +373,42 @@ export default function LearnCentre() {
 										</span>
 									</div>
 									<h1 className="font-extrabold font-heading text-[1.85rem] text-ink-900 tracking-tight">
-										Welcome back, {user.name.split(" ")[0]}{" "}
-										👋
+										{isProfileComplete(user)
+											? `Welcome back, ${firstNameOf(user)} 👋`
+											: "Let’s set up your profile 👋"}
 									</h1>
 									<p className="text-[0.9rem] text-ink-500">
-										{!activeSlug
-											? "You are not enrolled in a program yet."
-											: tab === "home"
-												? `${user.enrolled.length} enrolled program${user.enrolled.length === 1 ? "" : "s"} · Continue your learning quest`
-												: [
+										{!isProfileComplete(user)
+											? "Answer a few questions so we can personalize your Learning Centre."
+											: !activeSlug
+												? [
 														user.purpose &&
-															`Goal: ${user.purpose.toLowerCase()}`,
-														streak &&
-															`${streak}-day streak 🔥`,
+															`Goal: ${user.purpose}`,
+														user.interests
+															?.length &&
+															`Interests: ${user.interests.slice(0, 2).join(", ")}`,
+														"You are not enrolled in a program yet.",
 													]
 														.filter(Boolean)
-														.join(" · ")}
+														.join(" · ")
+												: tab === "home"
+													? [
+															`${user.enrolled.length} enrolled program${user.enrolled.length === 1 ? "" : "s"}`,
+															user.purpose &&
+																`Goal: ${user.purpose}`,
+														]
+															.filter(Boolean)
+															.join(" · ")
+													: [
+															user.purpose &&
+																`Goal: ${user.purpose.toLowerCase()}`,
+															user.city &&
+																user.city,
+															streak &&
+																`${streak}-day streak 🔥`,
+														]
+															.filter(Boolean)
+															.join(" · ")}
 									</p>
 								</div>
 								<div className="flex flex-wrap items-center gap-2">

@@ -31,17 +31,17 @@ export default function ProfilePanel() {
 		{
 			icon: "🎓",
 			label: "Education",
-			value: user?.education || "Undergraduate (pursuing)",
+			value: user?.education || "Not set yet",
 		},
 		{
 			icon: "🏛️",
 			label: "College / University",
-			value: user?.college || "Mumbai University",
+			value: user?.college || "Not set yet",
 		},
 		{
 			icon: "📅",
 			label: "Graduation Year",
-			value: user?.year || "2025",
+			value: user?.year || "Not set yet",
 		},
 		{
 			icon: "📍",
@@ -49,19 +49,17 @@ export default function ProfilePanel() {
 			value:
 				[user?.city, user?.state, user?.country]
 					.filter(Boolean)
-					.join(", ") || "Mumbai, Maharashtra, India",
+					.join(", ") || "Not set yet",
 		},
 		{
 			icon: "🎯",
 			label: "Primary Goal",
-			value: user?.purpose || "Get an internship",
+			value: user?.purpose || "Not set yet",
 		},
 		{
 			icon: "💡",
 			label: "Interests",
-			value:
-				(user?.interests || []).join(", ") ||
-				"Generative AI, Prompt Engineering, Agentic Workflows",
+			value: (user?.interests || []).join(", ") || "Not set yet",
 		},
 	]
 
@@ -100,10 +98,10 @@ export default function ProfilePanel() {
 							</div>
 
 							<h2 className="font-extrabold font-heading text-2xl text-ink-900 tracking-tight">
-								{user?.name}
+								{user?.name || "Complete your profile"}
 							</h2>
 							<p className="font-mono text-[0.84rem] text-ink-500">
-								📞 {user?.mobile || "+91 98765 43210"}
+								📞 {user?.mobile || "—"}
 							</p>
 						</div>
 					</div>
@@ -124,7 +122,7 @@ export default function ProfilePanel() {
 							type="button"
 							variant="outline"
 						>
-							Edit Goal & Preferences ⚙️
+							Edit profile answers ⚙️
 						</Button>
 					</div>
 				</div>

@@ -74,10 +74,10 @@ Header: logged-out = Login / Start free. Logged-in = Refer & Earn / Continue lea
 ## Dummy auth
 
 - OTP: `123456`
-- Any valid-length mobile works
-- Session user is always **Riya Sharma**, `+919876543210`, Mumbai, enrolled in `generative-ai` and `data-analytics`
-- Files: `src/actions/auth.js`, `src/hooks/auth/*`, `src/app/api/auth/{otp,verify,session}`, `src/organisms/auth-card.jsx`
-- Do not restore the profile/pincode step unless asked
+- Any valid-length mobile works and creates a per-mobile user (not hard-coded Riya)
+- First login opens a required onboarding wizard: name + education, college, graduation year, city, primary goal, interests
+- Answers drive Learning Centre greeting and Profile; onboarding is skipped on later logins once `profileComplete`
+- Files: `src/actions/auth.js`, `src/hooks/auth/*`, `src/lib/auth/handlers.js`, `src/lib/data/onboarding.js`, `src/organisms/learn-centre/onboard-modal.jsx`
 
 ## Catalogue slugs
 

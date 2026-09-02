@@ -1,6 +1,7 @@
 "use server"
 
 import { cookies } from "next/headers"
+import { updateProfileResult } from "@/lib/auth/handlers"
 import { fetchApi } from "@/services/fetch"
 
 const SESSION_COOKIE = "lu_session"
@@ -46,8 +47,10 @@ export const updateLearner = async payload => {
 	const store = await cookies()
 	const mobile = store.get(SESSION_COOKIE)?.value
 	if (!mobile) return { data: null, error: true, message: "Not signed in" }
-	return fetchApi("/api/learn/profile", {
-		body: { ...payload, mobile },
-		method: "POST",
-	})
+	const result = updateProfileResult(mobile, payload)
+	return {
+		data: result.data,
+		error: result.error,
+		message: result.message,
+	}
 }
