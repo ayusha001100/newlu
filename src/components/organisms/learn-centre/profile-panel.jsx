@@ -33,16 +33,36 @@ export default function ProfilePanel() {
 			label: "Education",
 			value: user?.education || "Not set yet",
 		},
-		{
-			icon: "🏛️",
-			label: "College / University",
-			value: user?.college || "Not set yet",
-		},
-		{
-			icon: "📅",
-			label: "Graduation Year",
-			value: user?.year || "Not set yet",
-		},
+		...(user?.education === "Working professional"
+			? [
+					{
+						icon: "🏢",
+						label: "Company",
+						value: user?.company || "Not set yet",
+					},
+					{
+						icon: "⏱️",
+						label: "Experience",
+						value: user?.experienceYears || "Not set yet",
+					},
+					{
+						icon: "💰",
+						label: "Current package",
+						value: user?.currentPackage || "Not set yet",
+					},
+				]
+			: [
+					{
+						icon: "🏛️",
+						label: "College / University",
+						value: user?.college || "Not set yet",
+					},
+					{
+						icon: "📅",
+						label: "Graduation Year",
+						value: user?.year || "Not set yet",
+					},
+				]),
 		{
 			icon: "📍",
 			label: "Location",

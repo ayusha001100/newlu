@@ -5,13 +5,13 @@ export const LEARN_TABS = [
 	{ icon: "⚡", id: "home", label: "Dashboard" },
 	{ icon: "📖", id: "learn", label: "Learn & Modules" },
 	{ icon: "💼", id: "opportunities", label: "Job Matches" },
-	{ icon: "🏆", id: "career", label: "Career Passport" },
+	{ icon: "🏆", id: "career", label: "Report Card" },
 	{ icon: "👤", id: "profile", label: "Profile" },
 ]
 
 export const LEARN_SUBS = {
 	career: [
-		{ id: "passport", label: "Career Passport" },
+		{ id: "passport", label: "Report Card" },
 		{ id: "skills", label: "Skills" },
 		{ id: "assessments", label: "Assessments" },
 	],

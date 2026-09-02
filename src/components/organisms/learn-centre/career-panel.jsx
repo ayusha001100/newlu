@@ -92,7 +92,7 @@ function PassportView() {
 
 	const share = () => {
 		const summary = [
-			`${user.name} — LetsUpgrade Career Passport`,
+			`${user.name} — LetsUpgrade Report Card`,
 			`${program.title}: ${cert.earned ? cert.grade : "in progress"} (${cert.finalScore}%)`,
 			...report.map(
 				skill =>
@@ -101,7 +101,7 @@ function PassportView() {
 		].join("\n")
 		navigator.clipboard?.writeText(summary)
 		toast.add({
-			title: "Career Passport summary copied to clipboard! 📋",
+			title: "Report Card summary copied to clipboard!",
 			type: "success",
 		})
 	}
@@ -112,7 +112,7 @@ function PassportView() {
 			<section className="rounded-3xl border border-line bg-white p-6 shadow-xs sm:p-7">
 				<div className="mb-3 flex flex-wrap items-end justify-between gap-3">
 					<div>
-						<PanelKicker>PASSPORT COMPLETION STRENGTH</PanelKicker>
+						<PanelKicker>REPORT CARD STRENGTH</PanelKicker>
 						<h3 className="font-extrabold font-heading text-2xl text-ink-900">
 							Profile Readiness Score
 						</h3>
@@ -146,7 +146,7 @@ function PassportView() {
 				) : (
 					<p className="font-semibold text-[0.86rem] text-emerald-800">
 						✓ Complete! Everything employers and hiring partners
-						look for is verified on your passport.
+						look for is verified on your report card.
 					</p>
 				)}
 			</section>
@@ -231,7 +231,7 @@ function PassportView() {
 
 				<div className="mt-8 flex flex-wrap gap-3 border-line/60 border-t pt-5">
 					<Button onClick={share} type="button">
-						Copy Shareable Passport 📋
+						Copy Shareable Report Card
 					</Button>
 					<Button
 						onClick={() => setTab("opportunities")}
@@ -560,7 +560,7 @@ export default function CareerPanel() {
 			<div className="mb-6">
 				<PanelKicker>CAREER HUB</PanelKicker>
 				<h2 className="mb-1.5 font-extrabold font-heading text-2xl text-ink-900">
-					Career Passport & Verified Evidence
+					Report Card & Verified Evidence
 				</h2>
 				<p className="text-[0.88rem] text-ink-500">
 					Credentials, verified skills, project artifacts, and

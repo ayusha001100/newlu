@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 const POINTS = [
 	"Live tracks and recorded bootcamps",
 	"Filter by the skill you want",
-	"Enrol into your Learning Centre",
+	"Enroll into your Learning Centre",
 ]
 
 const STEPS = [
@@ -26,7 +26,7 @@ const STEPS = [
 	},
 	{
 		n: "03",
-		text: "Enrol — it lands in your Learning Centre.",
+		text: "Enroll — it lands in your Learning Centre.",
 		title: "Instant access",
 	},
 ]
@@ -132,13 +132,13 @@ export default function ProgramsHero() {
 					<h1 className="mb-[22px] max-w-[760px] text-[clamp(2.65rem,4.4vw,4.35rem)] text-[var(--ink-900)] leading-[1.03] max-[720px]:text-[2.35rem] max-[980px]:text-[clamp(2.4rem,5.5vw,3.5rem)]">
 						Choose a track or bootcamp, then{" "}
 						<Highlight className="whitespace-normal">
-							enrol.
+							enroll.
 						</Highlight>
 					</h1>
 					<p className="max-w-[650px] text-[1.03rem] text-[var(--ink-500)] leading-[1.75] max-[720px]:text-[0.94rem] max-[720px]:leading-[1.65]">
 						Live career tracks and recorded entry-level programs in
 						one list. Filter by format and skill area, open the
-						curriculum, and enrol when you are ready.
+						curriculum, and enroll when you are ready.
 					</p>
 					<ul
 						aria-label="How this catalogue works"

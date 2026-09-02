@@ -14,6 +14,9 @@ export const useVerifyOtp = () => {
 		},
 		onSuccess: async data => {
 			if (data?.user) {
+				queryClient.setQueryData(["auth", "session"], {
+					user: data.user,
+				})
 				await queryClient.invalidateQueries({
 					queryKey: ["auth", "session"],
 				})

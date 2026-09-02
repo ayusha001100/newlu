@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import AuthStepDots from "@/atoms/auth-step-dots"
 import { DEMO_OTP } from "@/lib/data/auth"
 import { cn } from "@/lib/utils"
@@ -19,46 +19,52 @@ export default function AuthOtpStep({
 	pending,
 	resendLeft,
 	resendPending,
+	success = false,
 }) {
-	const [isUnlocked, setIsUnlocked] = useState(false)
 	const hasAutoSubmitted = useRef(false)
+	const onSubmitRef = useRef(onSubmit)
 
-	// Auto-trigger when 6 digits are typed
 	useEffect(() => {
-		if (otp.length === 6 && !hasAutoSubmitted.current) {
-			hasAutoSubmitted.current = true
-			if (otp === DEMO_OTP) {
-				setIsUnlocked(true)
-			}
-			const timer = setTimeout(() => {
-				const syntheticEvent = { preventDefault: () => {} }
-				onSubmit(syntheticEvent)
-			}, 380)
-			return () => clearTimeout(timer)
-		}
+		onSubmitRef.current = onSubmit
+	}, [onSubmit])
+
+	// Auto-submit once when 6 digits are ready. Keep submit fn in a ref so
+	// parent re-renders cannot cancel the timer before it fires.
+	useEffect(() => {
 		if (otp.length < 6) {
 			hasAutoSubmitted.current = false
-			setIsUnlocked(false)
+			return undefined
 		}
-	}, [otp, onSubmit])
+		if (hasAutoSubmitted.current || pending || success) return undefined
 
-	// Quick fill demo code
+		hasAutoSubmitted.current = true
+		const timer = setTimeout(() => {
+			onSubmitRef.current({ preventDefault() {} })
+		}, 280)
+		return () => clearTimeout(timer)
+	}, [otp, pending, success])
+
+	useEffect(() => {
+		if (error) hasAutoSubmitted.current = false
+	}, [error])
+
 	const handleQuickFill = () => {
-		setIsUnlocked(false)
+		hasAutoSubmitted.current = false
 		let current = ""
-		const demoDigits = DEMO_OTP.split("")
-		demoDigits.forEach((digit, i) => {
+		DEMO_OTP.split("").forEach((digit, index) => {
 			setTimeout(() => {
 				current += digit
 				onChange(current)
-			}, i * 65)
+			}, index * 65)
 		})
 	}
 
+	const unlocked =
+		success || (pending && otp === DEMO_OTP && otp.length === 6)
+
 	return (
 		<div className="relative">
-			{/* ACCESS GRANTED Laser Glow Pulse Wave */}
-			{isUnlocked && (
+			{unlocked && (
 				<div
 					aria-hidden="true"
 					className="pointer-events-none absolute -inset-4 z-20 animate-[hero-rise_0.4s_ease-out] rounded-3xl border-2 border-emerald-400 bg-emerald-500/10 shadow-[0_0_50px_rgba(16,185,129,0.35)] backdrop-blur-[1px]"
@@ -68,6 +74,7 @@ export default function AuthOtpStep({
 			<AuthStepDots step={1} />
 			<button
 				className="mb-3.5 inline-flex min-h-11 items-center font-semibold text-[0.85rem] text-ink-500 hover:text-ink-900"
+				disabled={pending || success}
 				onClick={onBack}
 				type="button"
 			>
@@ -86,7 +93,7 @@ export default function AuthOtpStep({
 			<form onSubmit={onSubmit}>
 				<OtpField
 					error={error}
-					isUnlocked={isUnlocked}
+					isUnlocked={unlocked}
 					onChange={onChange}
 					value={otp}
 				/>
@@ -94,25 +101,24 @@ export default function AuthOtpStep({
 				<Button
 					className={cn(
 						"mt-4 w-full transition-all duration-300",
-						isUnlocked
-							? "border-emerald-500 bg-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)]"
-							: "",
+						unlocked &&
+							"border-emerald-500 bg-emerald-600 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)]",
 					)}
-					disabled={pending || isUnlocked}
+					disabled={pending || success || otp.length < 6}
 					type="submit"
 				>
-					{isUnlocked
-						? "🔓 ACCESS GRANTED · LOGGING IN…"
+					{success
+						? "🔓 ACCESS GRANTED · CONTINUING…"
 						: pending
 							? "Verifying code…"
 							: "Verify & Continue"}
 				</Button>
 			</form>
 
-			{/* Quick-Pass Demo Button */}
 			<div className="mt-4">
 				<button
-					className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-400/40 bg-brand-500/10 px-3 py-2 font-bold font-heading text-[0.78rem] text-brand-ink transition-all hover:border-brand-500 hover:bg-brand-500/20 active:scale-[0.98]"
+					className="flex w-full items-center justify-center gap-2 rounded-xl border border-brand-400/40 bg-brand-500/10 px-3 py-2 font-bold font-heading text-[0.78rem] text-brand-ink transition-all hover:border-brand-500 hover:bg-brand-500/20 active:scale-[0.98] disabled:opacity-50"
+					disabled={pending || success}
 					onClick={handleQuickFill}
 					type="button"
 				>
@@ -127,7 +133,9 @@ export default function AuthOtpStep({
 				Didn't get it?{" "}
 				<button
 					className="font-semibold text-ink-900 underline disabled:cursor-default disabled:text-ink-300 disabled:no-underline"
-					disabled={resendLeft > 0 || resendPending}
+					disabled={
+						resendLeft > 0 || resendPending || pending || success
+					}
 					onClick={onResend}
 					type="button"
 				>

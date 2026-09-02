@@ -101,11 +101,26 @@ export default function LearnCentre() {
 		)
 	}, [user?.enrolled])
 
-	const setTab = useCallback(name => {
-		setTabState(name)
-		window.history.replaceState(null, "", `#${name}`)
-		window.scrollTo({ behavior: "smooth", top: 0 })
+	const applyRoute = useCallback(route => {
+		if (!route?.length) return
+		setTabState(route[0])
+		if (route[1]) {
+			setSubTabState(prev => ({ ...prev, [route[0]]: route[1] }))
+		}
 	}, [])
+
+	const setTab = useCallback(
+		name => {
+			const route = ROUTE[name] || [name]
+			applyRoute(route)
+			setScreen("dashboard")
+			if (typeof window !== "undefined") {
+				window.history.replaceState(null, "", `#${name}`)
+				window.scrollTo({ top: 0 })
+			}
+		},
+		[applyRoute],
+	)
 
 	const setSubTab = useCallback((panel, name) => {
 		setSubTabState(prev => ({ ...prev, [panel]: name }))
@@ -147,15 +162,15 @@ export default function LearnCentre() {
 	}, [enrollCourse, router, searchParams, setTab, user])
 
 	useEffect(() => {
-		const hash = window.location.hash.replace("#", "")
-		if (!hash) return
-		const route = ROUTE[hash]
-		if (!route) return
-		setTabState(route[0])
-		if (route[1]) {
-			setSubTabState(prev => ({ ...prev, [route[0]]: route[1] }))
+		const syncFromHash = () => {
+			const hash = window.location.hash.replace("#", "")
+			if (!hash) return
+			applyRoute(ROUTE[hash])
 		}
-	}, [])
+		syncFromHash()
+		window.addEventListener("hashchange", syncFromHash)
+		return () => window.removeEventListener("hashchange", syncFromHash)
+	}, [applyRoute])
 
 	const saveState = useCallback(
 		async (slug, updater) => {
@@ -320,7 +335,7 @@ export default function LearnCentre() {
 		],
 	)
 
-	if (session.isLoading || (user && progress.isLoading)) {
+	if (session.isLoading || (user && progress.isLoading && !progress.data)) {
 		return (
 			<div className="flex min-h-[60vh] items-center justify-center pt-[76px]">
 				<Loading />
@@ -333,6 +348,8 @@ export default function LearnCentre() {
 	const state = activeSlug ? states[activeSlug] || Engine.blankState() : null
 	const streak = state ? streakDays(state) : 0
 	const nudges = activeSlug ? Engine.nudges(activeSlug, state) : []
+	const activeTabMeta =
+		LEARN_TABS.find(item => item.id === tab) || LEARN_TABS[0]
 
 	const onNotif = () => {
 		toast.add({
@@ -357,27 +374,27 @@ export default function LearnCentre() {
 				<div className="flex min-h-[calc(100vh-76px)] w-full justify-center bg-[#FAFAFC] pt-[76px]">
 					<div className="flex min-h-full w-full max-w-[1600px]">
 						{/* Left-Anchored Dedicated Gamified Sidebar */}
-						<LearnSidebar />
+						<LearnSidebar onTabChange={setTab} tab={tab} />
 
 						{/* Right Main Content Area */}
 						<main className="min-w-0 flex-1 p-5 sm:p-7 md:p-9 lg:p-10">
 							{/* Top Welcome & Track Selector */}
 							<div className="mb-7 flex flex-wrap items-start justify-between gap-5">
-								<div>
-									<div className="mb-1.5 flex items-center gap-2">
-										<span className="rounded-full border border-brand-300 bg-brand-50 px-2.5 py-0.5 font-bold font-mono text-[0.68rem] text-brand-ink uppercase">
-											LEARNING CENTRE
+								<div className="min-w-0 flex-1">
+									<div className="mb-2 flex flex-wrap items-center gap-2">
+										<span className="rounded-full border border-brand-300 bg-brand-50 px-2.5 py-0.5 font-bold font-mono text-[0.68rem] text-brand-ink uppercase tracking-[0.08em]">
+											{activeTabMeta.label}
 										</span>
-										<span className="text-ink-400 text-xs">
-											● Live Student Hub
+										<span className="font-medium text-[0.78rem] text-ink-400">
+											Learning Centre
 										</span>
 									</div>
-									<h1 className="font-extrabold font-heading text-[1.85rem] text-ink-900 tracking-tight">
+									<h1 className="font-extrabold font-heading text-[1.7rem] text-ink-900 tracking-tight sm:text-[1.85rem]">
 										{isProfileComplete(user)
-											? `Welcome back, ${firstNameOf(user)} 👋`
-											: "Let’s set up your profile 👋"}
+											? `Hey ${firstNameOf(user)}, ready to level up?`
+											: "Let’s set up your profile"}
 									</h1>
-									<p className="text-[0.9rem] text-ink-500">
+									<p className="mt-1.5 max-w-[560px] text-[0.88rem] text-ink-500 leading-relaxed">
 										{!isProfileComplete(user)
 											? "Answer a few questions so we can personalize your Learning Centre."
 											: !activeSlug
@@ -387,7 +404,7 @@ export default function LearnCentre() {
 														user.interests
 															?.length &&
 															`Interests: ${user.interests.slice(0, 2).join(", ")}`,
-														"You are not enrolled in a program yet.",
+														"Pick a program below to get started.",
 													]
 														.filter(Boolean)
 														.join(" · ")
@@ -401,11 +418,12 @@ export default function LearnCentre() {
 															.join(" · ")
 													: [
 															user.purpose &&
-																`Goal: ${user.purpose.toLowerCase()}`,
+																`Goal: ${user.purpose}`,
 															user.city &&
 																user.city,
-															streak &&
-																`${streak}-day streak 🔥`,
+															streak
+																? `${streak}-day streak`
+																: null,
 														]
 															.filter(Boolean)
 															.join(" · ")}
@@ -426,19 +444,21 @@ export default function LearnCentre() {
 										))
 									) : (
 										<div className="flex items-center gap-2">
-											<span className="rounded-xl border border-line bg-white px-3.5 py-2 font-mono text-[0.78rem] text-ink-700 shadow-xs">
-												🔥{" "}
-												<strong className="text-ink-900">
-													3 Days
-												</strong>{" "}
-												Streak
+											<span className="rounded-2xl border border-line bg-white px-3.5 py-2.5 shadow-xs">
+												<span className="block font-mono text-[0.65rem] text-ink-400 uppercase tracking-wide">
+													Streak
+												</span>
+												<span className="font-extrabold font-heading text-[0.95rem] text-ink-900">
+													{streak || 3} days
+												</span>
 											</span>
-											<span className="rounded-xl border border-brand-200 bg-amber-50 px-3.5 py-2 font-mono text-[0.78rem] text-brand-ink shadow-xs">
-												⚡{" "}
-												<strong className="text-brand-ink">
-													750 XP
-												</strong>{" "}
-												Earned
+											<span className="rounded-2xl border border-brand-200 bg-[linear-gradient(180deg,#FFF8E8,var(--brand-50))] px-3.5 py-2.5 shadow-xs">
+												<span className="block font-mono text-[0.65rem] text-brand-ink/70 uppercase tracking-wide">
+													XP
+												</span>
+												<span className="font-extrabold font-heading text-[0.95rem] text-brand-ink">
+													750
+												</span>
 											</span>
 										</div>
 									)}
@@ -469,7 +489,7 @@ export default function LearnCentre() {
 							</nav>
 
 							{/* Active Tab Panel */}
-							<div>
+							<div key={tab}>
 								{tab === "home" ? <HomePanel /> : null}
 								{tab === "learn" ? <LearnPanel /> : null}
 								{tab === "opportunities" ? (

@@ -65,7 +65,7 @@ export const NAV_SECTIONS = [
 				label: "Development Internships",
 			},
 			{ href: "/internships?mode=Remote", label: "Remote Internships" },
-			{ href: "/learn#career", label: "Career Passport" },
+			{ href: "/learn#career", label: "Report Card" },
 		],
 		label: "Internships",
 		layout: "list",
